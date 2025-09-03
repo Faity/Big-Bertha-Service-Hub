@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Link } from 'react-router-dom';
 
@@ -59,11 +58,11 @@ const HomePage = () => {
                             Your unified dashboard for the HPE ML350 Gen10. Access, manage, and monitor high-performance local services with ease.
                         </p>
                     </div>
-                    <div className="flex-shrink-0 animate-pulse-glow rounded-xl">
+                    <div className="flex-shrink-0 animate-pulse-glow rounded-xl w-[400px] h-[300px]">
                         <img 
-                            src="https://picsum.photos/seed/hpeml350/400/300" 
-                            alt="HPE ML350 Gen10 Server" 
-                            className="rounded-xl object-cover shadow-2xl shadow-black/50 border-2 border-highlight-cyan/20"
+                            src="https://storage.googleapis.com/bot-sandbox-public-images/51a316b2-658f-4f51-872f-524f0c4063bd.png"
+                            alt="Ein HPE-Server in einer futuristischen, Hightech-Stadtlandschaft" 
+                            className="w-full h-full rounded-xl object-cover shadow-2xl shadow-black/50 border-2 border-highlight-cyan/20"
                         />
                     </div>
                 </div>
