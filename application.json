@@ -1,0 +1,229 @@
+{
+    "system_info": {
+        "os_name": "Linux",
+        "os_version": "Ubuntu 24.04.2 LTS",
+        "kernel_version": "6.11.0-29-generic",
+        "architecture": "x86_64",
+        "python_version": "3.12.3 (main, Jun 18 2025, 17:59:45) [GCC 13.3.0]",
+        "total_ram_gb": 251.36,
+        "cpu_info": "Intel(R) Xeon(R) Silver 4210R CPU @ 2.40GHz (x20)",
+        "comfyui_git_version": "e18f53cc (Git HEAD)"
+    },
+    "gpu_status": [
+        {
+            "name": "NVIDIA GeForce RTX 3050",
+            "vram_total_mb": 6144,
+            "vram_used_mb": 3,
+            "vram_free_mb": 6141,
+            "note": "Basic CSV query used for compatibility."
+        },
+        {
+            "name": "NVIDIA RTX 4000 Ada Generation",
+            "vram_total_mb": 20475,
+            "vram_used_mb": 3,
+            "vram_free_mb": 20472,
+            "note": "Basic CSV query used for compatibility."
+        }
+    ],
+    "ollama_status": {
+        "status": "running",
+        "service_status": "active",
+        "version": "ollama version is 0.8.0",
+        "installed_models": [
+            {
+                "name": "comfyadmin_master:latest",
+                "size": "727b32c80915",
+                "digest": "4.9",
+                "updated": "GB 18 hours ago"
+            },
+            {
+                "name": "llama3.1:8b",
+                "size": "46e0c10c039e",
+                "digest": "4.9",
+                "updated": "GB 18 hours ago"
+            },
+            {
+                "name": "deepseek-r1:latest",
+                "size": "6995872bfe4c",
+                "digest": "5.2",
+                "updated": "GB 19 hours ago"
+            },
+            {
+                "name": "comfyadmin:latest",
+                "size": "cf34f06eccdc",
+                "digest": "4.1",
+                "updated": "GB 4 weeks ago"
+            },
+            {
+                "name": "comfy-admin:latest",
+                "size": "5eb3ea4ba3f5",
+                "digest": "4.1",
+                "updated": "GB 7 weeks ago"
+            },
+            {
+                "name": "mistral:latest",
+                "size": "f974a74358d6",
+                "digest": "4.1",
+                "updated": "GB 7 weeks ago"
+            }
+        ]
+    },
+    "comfyui_paths": {
+        "base_path": "/opt/ki_project/ComfyUI",
+        "custom_nodes": "/opt/ki_project/ComfyUI/custom_nodes",
+        "checkpoints": "/opt/ki_project/ComfyUI/models/checkpoints",
+        "loras": "/opt/ki_project/ComfyUI/models/loras",
+        "vae": "/opt/ki_project/ComfyUI/models/vae",
+        "embeddings": "/opt/ki_project/ComfyUI/models/embeddings",
+        "controlnet": "/opt/ki_project/ComfyUI/models/controlnet",
+        "clip_vision": "/opt/ki_project/ComfyUI/models/clip_vision",
+        "unclip": "Path not found: /opt/ki_project/ComfyUI/models/unclip",
+        "upscale_models": "/opt/ki_project/ComfyUI/models/upscale_models",
+        "diffusers": "/opt/ki_project/ComfyUI/models/diffusers",
+        "gligen": "/opt/ki_project/ComfyUI/models/gligen",
+        "t2i_adapter": "Path not found: /opt/ki_project/ComfyUI/models/t2i_adapter",
+        "video_models": "Path not found: /opt/ki_project/ComfyUI/models/video_models",
+        "workflows": "/opt/ki_project/ComfyUI/Workflow Store"
+    },
+    "models_and_assets": {
+        "custom_nodes": [
+            "ComfyUI-Copilot",
+            "ComfyUI-Crystools",
+            "ComfyUI-Impact-Pack",
+            "ComfyUI-Iterative-Mixer",
+            "ComfyUI-Manager",
+            "ComfyUI-RMBG",
+            "ComfyUI_IPAdapter_plus",
+            "ComfyUI_bfl_api_pro_nodes",
+            "ComfyUI_nodes",
+            "Comfyui-Yolov8",
+            "batchimg-rembg-comfyui-nodes",
+            "comfy-mtb",
+            "comfy_bfl_nodes",
+            "comfyui-advanced-controlnet",
+            "comfyui-cyclist",
+            "comfyui-flux-bfl-api",
+            "comfyui-if_gemini",
+            "comfyui-impact-subpack",
+            "comfyui-inpaint-cropandstitch",
+            "comfyui-inpainteasy",
+            "comfyui-inspire-pack",
+            "comfyui-inspyrenet-rembg",
+            "comfyui-job-iterator",
+            "comfyui-kjnodes",
+            "comfyui-logicutils",
+            "comfyui-multigpu",
+            "comfyui-my-nodes",
+            "comfyui-ollama",
+            "comfyui-ultralytics-yolo",
+            "comfyui-utils-nodes",
+            "comfyui-various",
+            "comfyui_birefnet_ll",
+            "comfyui_controlnet_aux",
+            "comfyui_creepy_nodes",
+            "comfyui_essentials",
+            "comfyui_layerstyle",
+            "comfyui_segment_anything_plus",
+            "comfyui_soze",
+            "example_node.py.example",
+            "facerestore_cf",
+            "krita-ai-diffusion",
+            "portraittools-mw",
+            "rembg-comfyui-node",
+            "rgthree-comfy",
+            "was-node-suite-comfyui",
+            "was-ns",
+            "websocket_image_save.py"
+        ],
+        "checkpoints": [
+            "SDXL-TURBO",
+            "juggernautXL_v8Rundiffusion.safetensors",
+            "put_checkpoints_here",
+            "v1-5-pruned-emaonly-fp16.safetensors",
+            "v1-5-pruned-emaonly.safetensors"
+        ],
+        "loras": [
+            "Funko_Pop_Flux.safetensors",
+            "Funko_Pop_SDXL.safetensors",
+            "put_loras_here"
+        ],
+        "vae": [
+            "ae.safetensors",
+            "ae.sft",
+            "put_vae_here"
+        ],
+        "embeddings": [
+            "put_embeddings_or_textual_inversion_concepts_here"
+        ],
+        "controlnet": [
+            "diffusion_pytorch_model_promax.safetensors",
+            "put_controlnets_and_t2i_here"
+        ],
+        "clip_vision": [
+            "put_clip_vision_models_here"
+        ],
+        "upscale_models": [
+            "4x-UltraSharp.pth",
+            "8x_NMKD-Faces_160000_G.pth",
+            "ldsr",
+            "put_esrgan_and_other_upscale_models_here"
+        ],
+        "diffusers": [
+            "put_diffusers_models_here"
+        ],
+        "gligen": [
+            "put_gligen_models_here"
+        ]
+    },
+    "workflows": [
+        "01-faceswap.json",
+        "Base SD Workflow.json",
+        "FLUX.1 DEV 1.0【Zho】.json",
+        "FLUX.1_DEV_1.0_Zho.json",
+        "Miramonte_Gesicht_Isolieren.json",
+        "Miramonte_Gesichter_Isolieren v1.json",
+        "Miramonte_Person_Isolieren.json",
+        "Miramonte_Testflow.json",
+        "____inpaint_flux_1_fill_comfyworkflows.json",
+        "api_google_gemini.json",
+        "bastian4523_simple_workflow_for_beginners_with_lora___img2img_comfyworkflows.json"
+    ],
+    "storage_status": [
+        {
+            "path": "/opt/ki_project",
+            "total_gb": 549.07,
+            "used_gb": 13.03,
+            "free_gb": 508.08,
+            "filesystem_type": "ext4",
+            "device": "/dev/sda1",
+            "uuid": null,
+            "mount_options": "rw,relatime,stripe=256",
+            "error": null,
+            "description": "AI Project Base (Local SSD)"
+        },
+        {
+            "path": "/mnt/comfyui_iscsi_data",
+            "total_gb": 782.43,
+            "used_gb": 152.31,
+            "free_gb": 590.31,
+            "filesystem_type": "ext4",
+            "device": "/dev/sdd1",
+            "uuid": null,
+            "mount_options": "rw,relatime,stripe=320",
+            "error": null,
+            "description": "ComfyUI Models & LoRAs (iSCSI NAS)"
+        },
+        {
+            "path": "/mnt/ki_io_data",
+            "total_gb": 3022.69,
+            "used_gb": 0.18,
+            "free_gb": 2868.89,
+            "filesystem_type": "ext4",
+            "device": "/dev/sde1",
+            "uuid": null,
+            "mount_options": "rw,relatime,stripe=320",
+            "error": null,
+            "description": "AI Generated Results (iSCSI NAS)"
+        }
+    ]
+}

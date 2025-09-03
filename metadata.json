@@ -1,0 +1,5 @@
+{
+  "name": "Local Big Bertha Service Hub Ver2",
+  "description": "A dashboard for managing local services like ComfyUI, Ollama, and server monitoring on an HPE ML350 Gen10 server. Provides a modern, centralized interface for accessing and managing powerful AI and system tools.",
+  "requestFramePermissions": []
+}
