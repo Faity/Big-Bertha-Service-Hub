@@ -12,7 +12,6 @@ export const useSystemData = () => {
     useEffect(() => {
         let isMounted = true;
         
-        // Defensive: If no IP/Port is configured, stop here
         if (!monitorIp || !monitorPort) {
              setLoading(false);
              setError("Configuration missing: Check Settings");
@@ -41,11 +40,10 @@ export const useSystemData = () => {
                 };
 
                 if (rawData.redfish) {
-                    // Parse Thermal
                     if (rawData.redfish.Thermal) {
                         const thermal = rawData.redfish.Thermal;
                         
-                        // Temperatures: Find 'Ambient' or use first available
+                        // Temperatures
                         if (Array.isArray(thermal.Temperatures)) {
                             const ambientSensor = thermal.Temperatures.find((t: any) => 
                                 t.Name && t.Name.toLowerCase().includes('ambient')
@@ -57,30 +55,27 @@ export const useSystemData = () => {
                             }
                         }
 
-                        // Fans: ULTIMATE Fan Fix - Extract 'Reading' specifically
+                        // Fans: Extract 'Reading' specifically
                         if (Array.isArray(thermal.Fans)) {
                             const readings = thermal.Fans
                                 .map((f: any) => f.Reading)
                                 .filter((r: any) => typeof r === 'number');
                             
                             if (readings.length > 0) {
-                                // Calculate average fan speed
                                 const totalSpeed = readings.reduce((acc: number, curr: number) => acc + curr, 0);
                                 iloMetrics.fan_speed_percent = Math.round(totalSpeed / readings.length);
                             }
                         }
                     }
 
-                    // Parse Power
+                    // Power
                     if (rawData.redfish.Power && Array.isArray(rawData.redfish.Power.PowerControl)) {
-                        // Usually the first PowerControl block has the total consumption
                         const powerControl = rawData.redfish.Power.PowerControl[0];
                         if (powerControl && typeof powerControl.PowerConsumedWatts === 'number') {
                             iloMetrics.power_consumed_watts = powerControl.PowerConsumedWatts;
                         }
                     }
                 } else if (rawData.ilo_metrics) {
-                    // Fallback if backend still sends pre-parsed object
                     iloMetrics = rawData.ilo_metrics;
                 }
 
@@ -93,17 +88,19 @@ export const useSystemData = () => {
                     uptime_seconds: 0
                 };
 
-                // RAM Total Fix: Ensure it is treated as a number
-                if (typeof osStatus.ram_total_gb === 'string') {
-                    osStatus.ram_total_gb = parseFloat(osStatus.ram_total_gb);
+                // Robust RAM Mapping: Check if ram_total_gb is missing but present in system_info (legacy/fallback)
+                if ((!osStatus.ram_total_gb || osStatus.ram_total_gb === 0) && rawData.system_info?.total_ram_gb) {
+                    osStatus.ram_total_gb = parseFloat(rawData.system_info.total_ram_gb);
                 }
+                
+                // Ensure number types
+                if (typeof osStatus.ram_total_gb === 'string') osStatus.ram_total_gb = parseFloat(osStatus.ram_total_gb);
+                if (typeof osStatus.ram_used_gb === 'string') osStatus.ram_used_gb = parseFloat(osStatus.ram_used_gb);
 
-                // 3. Construct Final SystemData Object
                 const processedData: SystemData = {
                     ...rawData,
                     os_status: osStatus,
                     ilo_metrics: iloMetrics,
-                    // Ensure arrays exist
                     gpus: rawData.gpus || [],
                     storage_status: rawData.storage_status || [],
                     workflows: rawData.workflows || [],
@@ -125,10 +122,8 @@ export const useSystemData = () => {
             }
         };
 
-        // Initial fetch
         fetchData();
 
-        // Poll every 3 seconds
         const intervalId = setInterval(fetchData, 3000);
 
         return () => {

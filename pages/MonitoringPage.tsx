@@ -26,7 +26,7 @@ const MetricCard = ({ title, children, color = "text-text-main" }: { title: stri
 
 const ProgressBar = ({ value, max, colorClass }: { value: number, max: number, colorClass: string }) => {
     const safeValue = value ?? 0;
-    const safeMax = max > 0 ? max : 100; // Prevent division by zero
+    const safeMax = max > 0 ? max : 100;
     const percent = Math.min(100, Math.max(0, (safeValue / safeMax) * 100));
     
     return (
@@ -42,13 +42,9 @@ const ProgressBar = ({ value, max, colorClass }: { value: number, max: number, c
 const MonitoringPage = () => {
     const { data, loading, error } = useSystemData();
 
-    // 1. Loading State
     if (loading && !data) return <LoadingSpinner />;
-
-    // 2. Error State (Blocking only if no data available)
     if (error && !data) return <ErrorDisplay message={error} />;
 
-    // 3. Defensive Data Access
     const os = data?.os_status;
     const gpus = data?.gpus || [];
     const ilo = data?.ilo_metrics;
@@ -62,7 +58,6 @@ const MonitoringPage = () => {
             </h2>
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                {/* CPU Card */}
                 <MetricCard title="CPU Load" color="text-highlight-cyan">
                     <div className="flex items-end justify-between">
                         <span className="text-4xl font-mono font-bold text-white">{(os.cpu_usage_percent ?? 0).toFixed(1)}%</span>
@@ -71,7 +66,6 @@ const MonitoringPage = () => {
                     <ProgressBar value={os.cpu_usage_percent} max={100} colorClass="bg-highlight-cyan" />
                 </MetricCard>
 
-                {/* RAM Card - Corrected to use os_status.ram_total_gb */}
                 <MetricCard title="Memory Usage" color="text-purple-400">
                     <div className="flex flex-col">
                         <span className="text-3xl font-mono font-bold text-white">
@@ -82,7 +76,6 @@ const MonitoringPage = () => {
                     <ProgressBar value={os.ram_used_gb ?? 0} max={os.ram_total_gb ?? 1} colorClass="bg-purple-500" />
                 </MetricCard>
 
-                {/* Ambient Temp Card (iLO) */}
                 <MetricCard title="Inlet Temp" color="text-orange-400">
                      <div className="flex flex-col items-center justify-center h-full">
                         {ilo ? (
@@ -105,7 +98,6 @@ const MonitoringPage = () => {
                     </div>
                 </MetricCard>
 
-                 {/* GPU Temp Max (Summary) */}
                  <MetricCard title="Max GPU Temp" color="text-red-400">
                     <div className="flex items-center justify-center h-full">
                         {gpus.length > 0 ? (
@@ -122,7 +114,6 @@ const MonitoringPage = () => {
                 </MetricCard>
             </div>
 
-            {/* GPU Details Grid */}
             <h3 className="text-xl font-bold text-highlight-green mt-8 mb-4">GPU Accelerators</h3>
             {gpus.length > 0 ? (
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -141,7 +132,6 @@ const MonitoringPage = () => {
                                 </div>
                             </div>
                             
-                            {/* VRAM Bar - Corrected MB to GB Conversion */}
                             <div className="mb-4">
                                 <div className="flex justify-between text-xs mb-1">
                                     <span className="text-accent-light">VRAM Usage</span>
@@ -149,7 +139,6 @@ const MonitoringPage = () => {
                                         {((gpu.vram_used_mb ?? 0) / 1024).toFixed(2)} / {((gpu.vram_total_mb ?? 0) / 1024).toFixed(2)} GB
                                     </span>
                                 </div>
-                                {/* Calculating progress bar using GB values (or simplified MB/MB ratio which is the same) */}
                                 <ProgressBar 
                                     value={gpu.vram_used_mb ?? 0} 
                                     max={gpu.vram_total_mb ?? 1} 
@@ -157,7 +146,6 @@ const MonitoringPage = () => {
                                 />
                             </div>
 
-                             {/* Utilization Bar */}
                              <div>
                                 <div className="flex justify-between text-xs mb-1">
                                     <span className="text-accent-light">Core Utilization</span>

@@ -24,7 +24,6 @@ const SystemInfoPage = () => {
     if (error && !data) return <div className="p-12 text-center text-red-400 border border-red-500/20 rounded-lg mx-8 mt-8">System API Error: {error}</div>;
     if (!data) return null;
 
-    // Destructure safe references
     const { system_info, gpus, storage_status, comfyui_paths } = data;
 
     return (
@@ -32,7 +31,6 @@ const SystemInfoPage = () => {
             <h2 className="text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-highlight-green to-highlight-cyan">System Configuration</h2>
             
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                {/* Static System Info */}
                 <InfoCard title="Host Details">
                     <InfoItem label="Hostname" value={system_info?.hostname} />
                     <InfoItem label="OS" value={`${system_info?.os_name} ${system_info?.os_version}`} />
@@ -41,12 +39,10 @@ const SystemInfoPage = () => {
                     <InfoItem label="Python Env" value={system_info?.python_version} />
                 </InfoCard>
 
-                {/* CPU Info */}
                 <InfoCard title="Processor">
                     <InfoItem label="Model" value={system_info?.cpu_model} />
                 </InfoCard>
 
-                {/* Hardware / GPU */}
                 <InfoCard title="Graphics Acceleration">
                     {gpus && gpus.length > 0 ? (
                         <div className="space-y-4">
@@ -67,7 +63,6 @@ const SystemInfoPage = () => {
                     )}
                 </InfoCard>
 
-                 {/* Storage Info */}
                  <div className="md:col-span-2">
                     <InfoCard title="Storage Subsystem">
                         {storage_status && storage_status.length > 0 ? (
@@ -98,7 +93,6 @@ const SystemInfoPage = () => {
                     </InfoCard>
                  </div>
 
-                 {/* Paths Info */}
                  <div className="md:col-span-2">
                      <InfoCard title="Application Paths">
                         {comfyui_paths ? Object.entries(comfyui_paths).map(([key, val]) => (
