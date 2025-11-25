@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useSystemData } from '../hooks/useSystemData';
 
@@ -20,14 +19,13 @@ const InfoItem: React.FC<{ label: string; value: React.ReactNode }> = ({ label, 
 
 const SystemInfoPage = () => {
     const { data, loading, error } = useSystemData();
-    const [activeTab, setActiveTab] = useState('system');
 
-    if (loading) return <div className="p-12 text-center text-accent-light animate-pulse">Querying System Information...</div>;
-    if (error) return <div className="p-12 text-center text-red-400 border border-red-500/20 rounded-lg mx-8 mt-8">System API Error: {error}</div>;
+    if (loading && !data) return <div className="p-12 text-center text-accent-light animate-pulse">Querying System Information...</div>;
+    if (error && !data) return <div className="p-12 text-center text-red-400 border border-red-500/20 rounded-lg mx-8 mt-8">System API Error: {error}</div>;
     if (!data) return null;
 
     // Destructure safe references
-    const { system_info, gpus, storage_status, comfyui_paths } = data;
+    const { system_info, storage_status, comfyui_paths, gpus } = data;
 
     return (
         <div className="animate-fade-in-up space-y-8">
@@ -46,7 +44,17 @@ const SystemInfoPage = () => {
                 {/* CPU Info */}
                 <InfoCard title="Processor">
                     <InfoItem label="Model" value={system_info?.cpu_model} />
-                    {/* Add more static CPU details if API provides them */}
+                </InfoCard>
+
+                 {/* GPU Info */}
+                 <InfoCard title="Graphics Hardware">
+                    {gpus && gpus.length > 0 ? gpus.map((gpu, idx) => (
+                        <div key={idx} className="border-b border-accent-blue/10 last:border-0 pb-2 mb-2 last:mb-0 last:pb-0">
+                            <InfoItem label="Model" value={gpu.name} />
+                            <InfoItem label="Memory" value={`${(gpu.vram_total_mb / 1024).toFixed(1)} GB`} />
+                            <InfoItem label="Driver Temp" value={`${gpu.temperature_c}°C`} />
+                        </div>
+                    )) : <p className="text-accent-light italic">No dedicated GPU detected</p>}
                 </InfoCard>
 
                  {/* Storage Info */}

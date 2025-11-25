@@ -1,7 +1,7 @@
 import React from 'react';
 import { useSystemData } from '../hooks/useSystemData';
 
-// Reusable Components for this page
+// Reusable Components
 const LoadingSpinner = () => (
     <div className="flex flex-col items-center justify-center h-64 space-y-4">
         <div className="w-12 h-12 border-4 border-highlight-cyan border-t-transparent rounded-full animate-spin"></div>
@@ -46,15 +46,15 @@ const MonitoringPage = () => {
     // 1. Loading State
     if (loading && !data) return <LoadingSpinner />;
 
-    // 2. Error State (Blocking if no data)
+    // 2. Error State (Blocking only if no data available)
     if (error && !data) return <ErrorDisplay message={error} />;
 
-    // 3. Defensive Rendering: Safe access
+    // 3. Defensive Data Access
     const os = data?.os_status;
     const gpus = data?.gpus || [];
     const ilo = data?.ilo_metrics;
 
-    if (!os) return <ErrorDisplay message="Invalid Data Structure: 'os_status' missing." />;
+    if (!os) return <ErrorDisplay message="Waiting for valid sensor data..." />;
 
     return (
         <div className="animate-fade-in-up space-y-6">
@@ -86,7 +86,7 @@ const MonitoringPage = () => {
                 {/* Ambient Temp Card (iLO) */}
                 <MetricCard title="Inlet Temp" color="text-orange-400">
                      <div className="flex items-center justify-center h-full">
-                        {ilo && ilo.inlet_ambient_c !== undefined ? (
+                        {ilo ? (
                              <div className="text-center">
                                 <span className="text-4xl font-mono font-bold text-white">{ilo.inlet_ambient_c}°C</span>
                                 <p className="text-xs text-accent-light mt-1">Ambient Sensor</p>
@@ -137,7 +137,10 @@ const MonitoringPage = () => {
                             <div className="mb-4">
                                 <div className="flex justify-between text-xs mb-1">
                                     <span className="text-accent-light">VRAM Usage</span>
-                                    <span className="text-highlight-cyan">{gpu.vram_used_mb ?? 0} / {gpu.vram_total_mb ?? 0} MB</span>
+                                    {/* CONVERTED TO GB */}
+                                    <span className="text-highlight-cyan">
+                                        {((gpu.vram_used_mb ?? 0) / 1024).toFixed(1)} / {((gpu.vram_total_mb ?? 0) / 1024).toFixed(1)} GB
+                                    </span>
                                 </div>
                                 <ProgressBar value={gpu.vram_used_mb} max={gpu.vram_total_mb} colorClass="bg-highlight-cyan" />
                             </div>

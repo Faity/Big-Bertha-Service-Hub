@@ -787,7 +787,7 @@ const SystemInfoPage = () => {
     if (!data) return null;
 
     // Destructure safe references
-    const { system_info, storage_status, comfyui_paths } = data;
+    const { system_info, storage_status, comfyui_paths, gpus } = data;
 
     return (
         <div className="animate-fade-in-up space-y-8">
@@ -806,6 +806,17 @@ const SystemInfoPage = () => {
                 {/* CPU Info */}
                 <InfoCard title="Processor">
                     <InfoItem label="Model" value={system_info?.cpu_model} />
+                </InfoCard>
+
+                 {/* GPU Info */}
+                 <InfoCard title="Graphics Hardware">
+                    {gpus && gpus.length > 0 ? gpus.map((gpu, idx) => (
+                        <div key={idx} className="border-b border-accent-blue/10 last:border-0 pb-2 mb-2 last:mb-0 last:pb-0">
+                            <InfoItem label="Model" value={gpu.name} />
+                            <InfoItem label="Memory" value={\`\${(gpu.vram_total_mb / 1024).toFixed(1)} GB\`} />
+                            <InfoItem label="Driver Temp" value={\`\${gpu.temperature_c}°C\`} />
+                        </div>
+                    )) : <p className="text-accent-light italic">No dedicated GPU detected</p>}
                 </InfoCard>
 
                  {/* Storage Info */}
@@ -1262,7 +1273,7 @@ const MonitoringPage = () => {
                             <div className="mb-4">
                                 <div className="flex justify-between text-xs mb-1">
                                     <span className="text-accent-light">VRAM Usage</span>
-                                    <span className="text-highlight-cyan">{gpu.vram_used_mb ?? 0} / {gpu.vram_total_mb ?? 0} MB</span>
+                                    <span className="text-highlight-cyan">{((gpu.vram_used_mb ?? 0) / 1024).toFixed(1)} / {((gpu.vram_total_mb ?? 0) / 1024).toFixed(1)} GB</span>
                                 </div>
                                 <ProgressBar value={gpu.vram_used_mb} max={gpu.vram_total_mb} colorClass="bg-highlight-cyan" />
                             </div>
