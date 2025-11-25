@@ -1,3 +1,4 @@
+
 export interface SystemInfo {
     // Static Host Info
     hostname: string;
@@ -13,18 +14,14 @@ export interface SystemInfo {
 export interface OsStatus {
     // Dynamic Metrics
     cpu_usage_percent: number;
-    ram_total: string; // Now a string, e.g., "128.0 GB"
-    ram_used: string;  // Now a string, e.g., "32.5 GB"
+    ram_total_gb: number;
+    ram_used_gb: number;
     ram_used_percent: number;
     uptime_seconds: number;
 }
 
-export interface ThermalStatus {
+export interface IloMetrics {
     inlet_ambient_c: number;
-}
-
-export interface HpeMonitor {
-    thermal_status: ThermalStatus;
     power_consumed_watts?: number;
     fan_speed_percent?: number;
 }
@@ -87,7 +84,7 @@ export interface SystemData {
     system_info: SystemInfo;
     os_status: OsStatus;
     gpus: GpuInfo[];
-    hpe_monitor?: HpeMonitor; // New structure
+    ilo_metrics: IloMetrics;
     ollama_status: OllamaStatus;
     comfyui_paths: ComfyUiPaths;
     models_and_assets: ModelsAndAssets;

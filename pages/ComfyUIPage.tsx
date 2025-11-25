@@ -53,7 +53,6 @@ const AccordionItem = ({ title, items }: { title: string, items: string[] | unde
 const ComfyUIPage = () => {
     const { monitorIp, comfyUiPort } = useSettings();
     const { data, loading, error } = useSystemData();
-    // Dynamic URL using context settings
     const comfyUiUrl = `http://${monitorIp}:${comfyUiPort}`;
 
     return (

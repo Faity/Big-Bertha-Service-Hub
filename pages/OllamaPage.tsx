@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useSystemData } from '../hooks/useSystemData';
 import { useSettings } from '../contexts/SettingsContext';
@@ -14,7 +13,7 @@ const OllamaPage = () => {
     const { monitorIp, ollamaPort } = useSettings();
     const [message, setMessage] = useState('');
     
-    // Chat Simulation State (Frontend only for now)
+    // Chat UI state (purely frontend for now as per requirements)
     const [chatHistory, setChatHistory] = useState([
         { sender: 'ai', text: 'Ollama subsystem initialized. How can I assist you with the local models?' }
     ]);
@@ -29,7 +28,7 @@ const OllamaPage = () => {
         setMessage('');
         setIsSending(true);
 
-        // Simulation response
+        // Simulation response for UI demo
         setTimeout(() => {
             const aiResponse = { sender: 'ai', text: `Echo: ${newUserMessage.text} (This is a UI placeholder. Real chat integration requires backend endpoints.)` };
             setChatHistory(prev => [...prev, aiResponse]);
@@ -52,7 +51,7 @@ const OllamaPage = () => {
                     <div className="flex items-center space-x-3 mb-4">
                          <div className={`w-3 h-3 rounded-full ${isRunning ? 'bg-green-500 shadow-[0_0_10px_rgba(34,197,94,0.6)]' : 'bg-red-500'}`}></div>
                          <span className={`font-mono ${isRunning ? 'text-text-main' : 'text-red-400'}`}>
-                            {loading ? 'CHECKING...' : (isRunning ? 'ONLINE' : 'OFFLINE')}
+                            {loading && !data ? 'CHECKING...' : (isRunning ? 'ONLINE' : 'OFFLINE')}
                          </span>
                     </div>
                     {status && (

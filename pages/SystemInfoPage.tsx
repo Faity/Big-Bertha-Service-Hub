@@ -25,7 +25,7 @@ const SystemInfoPage = () => {
     if (!data) return null;
 
     // Destructure safe references
-    const { system_info, storage_status, comfyui_paths, gpus } = data;
+    const { system_info, gpus, storage_status, comfyui_paths } = data;
 
     return (
         <div className="animate-fade-in-up space-y-8">
@@ -46,16 +46,25 @@ const SystemInfoPage = () => {
                     <InfoItem label="Model" value={system_info?.cpu_model} />
                 </InfoCard>
 
-                 {/* GPU Info */}
-                 <InfoCard title="Graphics Hardware">
-                    {gpus && gpus.length > 0 ? gpus.map((gpu, idx) => (
-                        <div key={idx} className="border-b border-accent-blue/10 last:border-0 pb-2 mb-2 last:mb-0 last:pb-0">
-                            <InfoItem label="Model" value={gpu.name} />
-                            {/* Convert MB to GB */}
-                            <InfoItem label="Memory" value={`${(gpu.vram_total_mb / 1024).toFixed(1)} GB`} />
-                            <InfoItem label="Driver Temp" value={`${gpu.temperature_c}°C`} />
+                {/* Hardware / GPU */}
+                <InfoCard title="Graphics Acceleration">
+                    {gpus && gpus.length > 0 ? (
+                        <div className="space-y-4">
+                            {gpus.map((gpu, idx) => (
+                                <div key={idx} className="bg-primary p-3 rounded-lg border border-accent-blue/10">
+                                    <div className="flex justify-between items-center mb-1">
+                                        <span className="font-bold text-highlight-green">{gpu.name}</span>
+                                        <span className="text-xs text-accent-light">ID: {gpu.index}</span>
+                                    </div>
+                                    <div className="text-xs font-mono text-accent-light">
+                                        VRAM: {((gpu.vram_total_mb ?? 0) / 1024).toFixed(2)} GB
+                                    </div>
+                                </div>
+                            ))}
                         </div>
-                    )) : <p className="text-accent-light italic">No dedicated GPU detected</p>}
+                    ) : (
+                        <p className="text-accent-light italic">No dedicated GPUs detected.</p>
+                    )}
                 </InfoCard>
 
                  {/* Storage Info */}

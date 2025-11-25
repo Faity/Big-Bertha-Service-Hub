@@ -25,7 +25,6 @@ const MetricCard = ({ title, children, color = "text-text-main" }: { title: stri
 );
 
 const ProgressBar = ({ value, max, colorClass }: { value: number, max: number, colorClass: string }) => {
-    // Defensive check for inputs
     const safeValue = value ?? 0;
     const safeMax = max > 0 ? max : 100;
     const percent = Math.min(100, Math.max(0, (safeValue / safeMax) * 100));
@@ -52,8 +51,7 @@ const MonitoringPage = () => {
     // 3. Defensive Data Access
     const os = data?.os_status;
     const gpus = data?.gpus || [];
-    // Updated path for inlet temp based on new API structure
-    const inletTemp = data?.hpe_monitor?.thermal_status?.inlet_ambient_c;
+    const ilo = data?.ilo_metrics;
 
     if (!os) return <ErrorDisplay message="Waiting for valid sensor data..." />;
 
@@ -77,21 +75,29 @@ const MonitoringPage = () => {
                 <MetricCard title="Memory Usage" color="text-purple-400">
                     <div className="flex flex-col">
                         <span className="text-3xl font-mono font-bold text-white">
-                            {os.ram_used ?? "N/A"}
+                            {(os.ram_used_gb ?? 0).toFixed(1)} <span className="text-base text-accent-light">GB</span>
                         </span>
-                        <span className="text-xs text-accent-light">of {os.ram_total ?? "N/A"} Total</span>
+                        <span className="text-xs text-accent-light">of {(os.ram_total_gb ?? 0).toFixed(1)} GB Total</span>
                     </div>
-                    {/* Using percent directly as provided by API */}
-                    <ProgressBar value={os.ram_used_percent ?? 0} max={100} colorClass="bg-purple-500" />
+                    <ProgressBar value={os.ram_used_gb} max={os.ram_total_gb} colorClass="bg-purple-500" />
                 </MetricCard>
 
-                {/* Ambient Temp Card (HPE Monitor) */}
+                {/* Ambient Temp Card (iLO) */}
                 <MetricCard title="Inlet Temp" color="text-orange-400">
-                     <div className="flex items-center justify-center h-full">
-                        {inletTemp !== undefined ? (
-                             <div className="text-center">
-                                <span className="text-4xl font-mono font-bold text-white">{inletTemp}°C</span>
-                                <p className="text-xs text-accent-light mt-1">Ambient Sensor</p>
+                     <div className="flex flex-col items-center justify-center h-full">
+                        {ilo ? (
+                             <div className="text-center w-full">
+                                <span className="text-4xl font-mono font-bold text-white">{ilo.inlet_ambient_c}°C</span>
+                                <div className="flex justify-between items-center w-full mt-2 px-2">
+                                    <div className="text-xs text-accent-light">
+                                        <p>Power</p>
+                                        <p className="text-white font-bold">{ilo.power_consumed_watts ?? 0} W</p>
+                                    </div>
+                                    <div className="text-xs text-accent-light text-right">
+                                        <p>Fans</p>
+                                        <p className="text-white font-bold">{ilo.fan_speed_percent ?? 0}%</p>
+                                    </div>
+                                </div>
                             </div>
                         ) : (
                             <span className="text-accent-light italic">No Sensor Data</span>
@@ -135,13 +141,12 @@ const MonitoringPage = () => {
                                 </div>
                             </div>
                             
-                            {/* VRAM Bar */}
+                            {/* VRAM Bar - Converted MB to GB */}
                             <div className="mb-4">
                                 <div className="flex justify-between text-xs mb-1">
                                     <span className="text-accent-light">VRAM Usage</span>
-                                    {/* CONVERTED TO GB */}
                                     <span className="text-highlight-cyan">
-                                        {((gpu.vram_used_mb ?? 0) / 1024).toFixed(1)} / {((gpu.vram_total_mb ?? 0) / 1024).toFixed(1)} GB
+                                        {((gpu.vram_used_mb ?? 0) / 1024).toFixed(2)} / {((gpu.vram_total_mb ?? 0) / 1024).toFixed(2)} GB
                                     </span>
                                 </div>
                                 <ProgressBar value={gpu.vram_used_mb} max={gpu.vram_total_mb} colorClass="bg-highlight-cyan" />

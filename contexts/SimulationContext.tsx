@@ -1,3 +1,4 @@
+
 import React, { createContext, useContext, useState, useEffect, ReactNode, useCallback } from 'react';
 import { SystemData, GpuInfo, StorageStatus, ChartData } from '../types';
 
@@ -20,11 +21,6 @@ const updateChartData = (prevData: ChartData[], range: number) => {
     return newData.map((d, i) => ({ ...d, name: `${newData.length - 1 - i}s ago` }));
 };
 
-const parseRam = (ramStr?: string): number => {
-    if (!ramStr) return 0;
-    const val = parseFloat(ramStr.split(' ')[0]);
-    return isNaN(val) ? 0 : val;
-};
 
 interface AppDataContextType {
     baseData: SystemData | null;
@@ -69,7 +65,8 @@ export const SimulationProvider = ({ children }: { children: ReactNode }) => {
                 setBaseData(jsonData);
                 setDisplayData(jsonData);
                 // Initialize RAM history based on fetched data
-                const totalRam = parseRam(jsonData.os_status?.ram_total) || 100;
+                // Accessing ram_total_gb from os_status
+                const totalRam = jsonData.os_status?.ram_total_gb || 100;
                 setRamHistory(generateInitialData(HISTORY_LENGTH, Math.round(totalRam)));
             } catch (e: any) {
                 setError(e.message);
@@ -118,7 +115,7 @@ export const SimulationProvider = ({ children }: { children: ReactNode }) => {
         setNetHistory(prev => updateChartData(prev, 1000));
         setDiskHistory(prev => updateChartData(prev, 500));
         
-        const totalRam = parseRam(baseData.os_status?.ram_total) || 100;
+        const totalRam = baseData.os_status?.ram_total_gb || 100;
         setRamHistory(prev => updateChartData(prev, Math.round(totalRam)));
 
     }, [baseData]);
@@ -134,7 +131,7 @@ export const SimulationProvider = ({ children }: { children: ReactNode }) => {
             if(baseData) {
                 // Also reset chart data to a static "snapshot"
                  setCpuHistory(generateInitialData(HISTORY_LENGTH, 100));
-                 const totalRam = parseRam(baseData.os_status?.ram_total) || 100;
+                 const totalRam = baseData.os_status?.ram_total_gb || 100;
                  setRamHistory(generateInitialData(HISTORY_LENGTH, Math.round(totalRam)));
                  setNetHistory(generateInitialData(HISTORY_LENGTH, 1000));
                  setDiskHistory(generateInitialData(HISTORY_LENGTH, 500));

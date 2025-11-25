@@ -1,6 +1,5 @@
-
 import { useState, useEffect } from 'react';
-import { SystemData } from '../types';
+import { SystemData, IloMetrics } from '../types';
 import { useSettings } from '../contexts/SettingsContext';
 
 export const useSystemData = () => {
@@ -12,25 +11,106 @@ export const useSystemData = () => {
 
     useEffect(() => {
         let isMounted = true;
+        
+        // Defensive: If no IP/Port is configured, stop here
+        if (!monitorIp || !monitorPort) {
+             setLoading(false);
+             setError("Configuration missing: Check Settings");
+             return;
+        }
+
         const apiUrl = `http://${monitorIp}:${monitorPort}/api/sysmon`;
 
         const fetchData = async () => {
             try {
-                // Defensive: If no IP/Port is configured, don't fetch
-                if (!monitorIp || !monitorPort) {
-                   throw new Error("Configuration missing: Check Settings");
-                }
-
                 const response = await fetch(apiUrl);
 
                 if (!response.ok) {
                     throw new Error(`API Error: ${response.status} ${response.statusText}`);
                 }
 
-                const jsonData: SystemData = await response.json();
+                const rawData: any = await response.json();
+                
+                // --- Frontend Data Interpretation & Parsing ---
+                
+                // 1. Parse Redfish/iLO Data (Thermal & Power)
+                let iloMetrics: IloMetrics = {
+                    inlet_ambient_c: 0,
+                    power_consumed_watts: 0,
+                    fan_speed_percent: 0
+                };
+
+                if (rawData.redfish) {
+                    // Parse Thermal
+                    if (rawData.redfish.Thermal) {
+                        const thermal = rawData.redfish.Thermal;
+                        
+                        // Temperatures: Find 'Ambient' or use first available
+                        if (Array.isArray(thermal.Temperatures)) {
+                            const ambientSensor = thermal.Temperatures.find((t: any) => 
+                                t.Name && t.Name.toLowerCase().includes('ambient')
+                            );
+                            if (ambientSensor && typeof ambientSensor.ReadingCelsius === 'number') {
+                                iloMetrics.inlet_ambient_c = ambientSensor.ReadingCelsius;
+                            } else if (thermal.Temperatures.length > 0) {
+                                iloMetrics.inlet_ambient_c = thermal.Temperatures[0].ReadingCelsius ?? 0;
+                            }
+                        }
+
+                        // Fans: ULTIMATE Fan Fix - Extract 'Reading' specifically
+                        if (Array.isArray(thermal.Fans)) {
+                            const readings = thermal.Fans
+                                .map((f: any) => f.Reading)
+                                .filter((r: any) => typeof r === 'number');
+                            
+                            if (readings.length > 0) {
+                                // Calculate average fan speed
+                                const totalSpeed = readings.reduce((acc: number, curr: number) => acc + curr, 0);
+                                iloMetrics.fan_speed_percent = Math.round(totalSpeed / readings.length);
+                            }
+                        }
+                    }
+
+                    // Parse Power
+                    if (rawData.redfish.Power && Array.isArray(rawData.redfish.Power.PowerControl)) {
+                        // Usually the first PowerControl block has the total consumption
+                        const powerControl = rawData.redfish.Power.PowerControl[0];
+                        if (powerControl && typeof powerControl.PowerConsumedWatts === 'number') {
+                            iloMetrics.power_consumed_watts = powerControl.PowerConsumedWatts;
+                        }
+                    }
+                } else if (rawData.ilo_metrics) {
+                    // Fallback if backend still sends pre-parsed object
+                    iloMetrics = rawData.ilo_metrics;
+                }
+
+                // 2. Normalize OS Status
+                const osStatus = rawData.os_status || {
+                    cpu_usage_percent: 0,
+                    ram_total_gb: 0,
+                    ram_used_gb: 0,
+                    ram_used_percent: 0,
+                    uptime_seconds: 0
+                };
+
+                // RAM Total Fix: Ensure it is treated as a number
+                if (typeof osStatus.ram_total_gb === 'string') {
+                    osStatus.ram_total_gb = parseFloat(osStatus.ram_total_gb);
+                }
+
+                // 3. Construct Final SystemData Object
+                const processedData: SystemData = {
+                    ...rawData,
+                    os_status: osStatus,
+                    ilo_metrics: iloMetrics,
+                    // Ensure arrays exist
+                    gpus: rawData.gpus || [],
+                    storage_status: rawData.storage_status || [],
+                    workflows: rawData.workflows || [],
+                };
                 
                 if (isMounted) {
-                    setData(jsonData);
+                    setData(processedData);
                     setError(null);
                 }
             } catch (err: any) {
@@ -48,8 +128,8 @@ export const useSystemData = () => {
         // Initial fetch
         fetchData();
 
-        // Poll every 2 seconds for live feeling
-        const intervalId = setInterval(fetchData, 2000);
+        // Poll every 3 seconds
+        const intervalId = setInterval(fetchData, 3000);
 
         return () => {
             isMounted = false;
