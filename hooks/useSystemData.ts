@@ -43,19 +43,24 @@ export const useSystemData = () => {
                     if (rawData.redfish.Thermal) {
                         const thermal = rawData.redfish.Thermal;
                         
-                        // Temperatures
+                        // Temperatures: Look specifically for "01-Inlet Ambient"
                         if (Array.isArray(thermal.Temperatures)) {
                             const ambientSensor = thermal.Temperatures.find((t: any) => 
-                                t.Name && t.Name.toLowerCase().includes('ambient')
+                                t.Name && t.Name.trim() === '01-Inlet Ambient'
                             );
+                            
                             if (ambientSensor && typeof ambientSensor.ReadingCelsius === 'number') {
                                 iloMetrics.inlet_ambient_c = ambientSensor.ReadingCelsius;
-                            } else if (thermal.Temperatures.length > 0) {
-                                iloMetrics.inlet_ambient_c = thermal.Temperatures[0].ReadingCelsius ?? 0;
+                            } else {
+                                // Fallback to generic ambient search if specific name not found
+                                const genericAmbient = thermal.Temperatures.find((t: any) => 
+                                    t.Name && t.Name.toLowerCase().includes('ambient')
+                                );
+                                iloMetrics.inlet_ambient_c = genericAmbient?.ReadingCelsius ?? 0;
                             }
                         }
 
-                        // Fans: Extract 'Reading' specifically
+                        // Fans: Extract 'Reading' specifically (Percentage)
                         if (Array.isArray(thermal.Fans)) {
                             const readings = thermal.Fans
                                 .map((f: any) => f.Reading)
@@ -88,20 +93,47 @@ export const useSystemData = () => {
                     uptime_seconds: 0
                 };
 
-                // Robust RAM Mapping: Check if ram_total_gb is missing but present in system_info (legacy/fallback)
-                if ((!osStatus.ram_total_gb || osStatus.ram_total_gb === 0) && rawData.system_info?.total_ram_gb) {
-                    osStatus.ram_total_gb = parseFloat(rawData.system_info.total_ram_gb);
+                // Robust RAM Mapping
+                if (typeof osStatus.ram_total_gb === 'string') {
+                    osStatus.ram_total_gb = parseFloat(osStatus.ram_total_gb);
                 }
                 
-                // Ensure number types
-                if (typeof osStatus.ram_total_gb === 'string') osStatus.ram_total_gb = parseFloat(osStatus.ram_total_gb);
-                if (typeof osStatus.ram_used_gb === 'string') osStatus.ram_used_gb = parseFloat(osStatus.ram_used_gb);
+                // 3. Normalize GPU Data (Bytes -> GiB)
+                // We map raw bytes to the existing _mb fields but store the GiB value
+                const processedGpus = (rawData.gpus || []).map((gpu: any) => {
+                    // 1 GiB = 1024^3 bytes
+                    const bytesInGiB = 1073741824; 
+                    
+                    let totalGiB = 0;
+                    let usedGiB = 0;
+
+                    if (typeof gpu.vram_total_bytes === 'number') {
+                        totalGiB = gpu.vram_total_bytes / bytesInGiB;
+                    } else if (typeof gpu.vram_total_mb === 'number') {
+                        // Fallback if bytes not available
+                        totalGiB = gpu.vram_total_mb / 1024;
+                    }
+
+                    if (typeof gpu.vram_used_bytes === 'number') {
+                        usedGiB = gpu.vram_used_bytes / bytesInGiB;
+                    } else if (typeof gpu.vram_used_mb === 'number') {
+                        // Fallback
+                        usedGiB = gpu.vram_used_mb / 1024;
+                    }
+
+                    return {
+                        ...gpu,
+                        // Update field to hold GiB value
+                        vram_total_mb: totalGiB, 
+                        vram_used_mb: usedGiB
+                    };
+                });
 
                 const processedData: SystemData = {
                     ...rawData,
                     os_status: osStatus,
                     ilo_metrics: iloMetrics,
-                    gpus: rawData.gpus || [],
+                    gpus: processedGpus,
                     storage_status: rawData.storage_status || [],
                     workflows: rawData.workflows || [],
                 };

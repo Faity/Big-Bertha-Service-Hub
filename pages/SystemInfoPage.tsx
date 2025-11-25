@@ -53,7 +53,7 @@ const SystemInfoPage = () => {
                                         <span className="text-xs text-accent-light">ID: {gpu.index}</span>
                                     </div>
                                     <div className="text-xs font-mono text-accent-light">
-                                        VRAM: {((gpu.vram_total_mb ?? 0) / 1024).toFixed(2)} GB
+                                        VRAM: {(gpu.vram_total_mb ?? 0).toFixed(2)} GB
                                     </div>
                                 </div>
                             ))}
