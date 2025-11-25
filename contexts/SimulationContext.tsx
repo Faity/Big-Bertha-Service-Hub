@@ -1,5 +1,6 @@
+
 import React, { createContext, useContext, useState, useEffect, ReactNode, useCallback } from 'react';
-import { SystemData, GpuStatus, StorageStatus, ChartData } from '../types';
+import { SystemData, GpuInfo, StorageStatus, ChartData } from '../types';
 
 // Utility to create a deeper copy for simulation
 const deepCopy = <T,>(obj: T): T => {
@@ -64,7 +65,9 @@ export const SimulationProvider = ({ children }: { children: ReactNode }) => {
                 setBaseData(jsonData);
                 setDisplayData(jsonData);
                 // Initialize RAM history based on fetched data
-                setRamHistory(generateInitialData(HISTORY_LENGTH, Math.round(jsonData.system_info.total_ram_gb)));
+                // Accessing ram_total_gb from os_status
+                const totalRam = jsonData.os_status?.ram_total_gb || 100;
+                setRamHistory(generateInitialData(HISTORY_LENGTH, Math.round(totalRam)));
             } catch (e: any) {
                 setError(e.message);
             } finally {
@@ -80,26 +83,30 @@ export const SimulationProvider = ({ children }: { children: ReactNode }) => {
         const simulatedData = deepCopy(baseData);
 
         // Simulate GPU VRAM usage
-        simulatedData.gpu_status = simulatedData.gpu_status.map((gpu: GpuStatus) => {
-            const usageChange = (Math.random() - 0.45) * (gpu.vram_total_mb * 0.05); // Fluctuate by up to 5%, tend to increase slightly
-            const newUsed = Math.max(3, Math.min(gpu.vram_total_mb * 0.95, gpu.vram_used_mb + usageChange));
-            return {
-                ...gpu,
-                vram_used_mb: newUsed,
-                vram_free_mb: gpu.vram_total_mb - newUsed,
-            };
-        });
+        if (simulatedData.gpus) {
+            simulatedData.gpus = simulatedData.gpus.map((gpu: GpuInfo) => {
+                const usageChange = (Math.random() - 0.45) * (gpu.vram_total_mb * 0.05); // Fluctuate by up to 5%, tend to increase slightly
+                const newUsed = Math.max(3, Math.min(gpu.vram_total_mb * 0.95, gpu.vram_used_mb + usageChange));
+                return {
+                    ...gpu,
+                    vram_used_mb: newUsed,
+                    vram_free_mb: gpu.vram_total_mb - newUsed,
+                };
+            });
+        }
 
         // Simulate Storage usage
-        simulatedData.storage_status = simulatedData.storage_status.map((disk: StorageStatus) => {
-             const usageChange = (Math.random() - 0.4) * 0.01; // Fluctuate by a small amount
-             const newUsed = Math.max(0, Math.min(disk.total_gb * 0.98, disk.used_gb + usageChange));
-             return {
-                 ...disk,
-                 used_gb: newUsed,
-                 free_gb: disk.total_gb - newUsed,
-             };
-        });
+        if (simulatedData.storage_status) {
+            simulatedData.storage_status = simulatedData.storage_status.map((disk: StorageStatus) => {
+                 const usageChange = (Math.random() - 0.4) * 0.01; // Fluctuate by a small amount
+                 const newUsed = Math.max(0, Math.min(disk.total_gb * 0.98, disk.used_gb + usageChange));
+                 return {
+                     ...disk,
+                     used_gb: newUsed,
+                     free_gb: disk.total_gb - newUsed,
+                 };
+            });
+        }
         
         setDisplayData(simulatedData);
 
@@ -107,7 +114,9 @@ export const SimulationProvider = ({ children }: { children: ReactNode }) => {
         setCpuHistory(prev => updateChartData(prev, 100));
         setNetHistory(prev => updateChartData(prev, 1000));
         setDiskHistory(prev => updateChartData(prev, 500));
-        setRamHistory(prev => updateChartData(prev, Math.round(baseData.system_info.total_ram_gb)));
+        
+        const totalRam = baseData.os_status?.ram_total_gb || 100;
+        setRamHistory(prev => updateChartData(prev, Math.round(totalRam)));
 
     }, [baseData]);
 
@@ -122,7 +131,8 @@ export const SimulationProvider = ({ children }: { children: ReactNode }) => {
             if(baseData) {
                 // Also reset chart data to a static "snapshot"
                  setCpuHistory(generateInitialData(HISTORY_LENGTH, 100));
-                 setRamHistory(generateInitialData(HISTORY_LENGTH, Math.round(baseData.system_info.total_ram_gb)));
+                 const totalRam = baseData.os_status?.ram_total_gb || 100;
+                 setRamHistory(generateInitialData(HISTORY_LENGTH, Math.round(totalRam)));
                  setNetHistory(generateInitialData(HISTORY_LENGTH, 1000));
                  setDiskHistory(generateInitialData(HISTORY_LENGTH, 500));
             }

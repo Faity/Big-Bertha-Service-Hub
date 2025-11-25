@@ -1,7 +1,6 @@
+
 import React, { useState } from 'react';
 import { NavLink, Outlet } from 'react-router-dom';
-import ServerOffButton from './ServerOffButton';
-import DownloadSourceButton from './DownloadSourceButton';
 import SettingsModal from './SettingsModal';
 
 const CpuChipIcon = () => (
@@ -54,7 +53,6 @@ const CogIcon = () => (
     </svg>
 );
 
-
 const navItems = [
     { path: '/', label: 'Dashboard', icon: <HomeIcon /> },
     { path: '/system-info', label: 'System Info', icon: <InformationCircleIcon /> },
@@ -98,9 +96,7 @@ const Layout = () => {
                         <CogIcon />
                         <span>Settings</span>
                     </button>
-                    <DownloadSourceButton />
-                    <ServerOffButton />
-                    <div className="text-center">
+                    <div className="text-center pt-4 border-t border-accent-blue/10">
                       <p>HPE ML350 Gen10</p>
                       <p>&copy; 2024 Localhost Services</p>
                     </div>

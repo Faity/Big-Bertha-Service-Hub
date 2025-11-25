@@ -1,195 +1,93 @@
+
 import React, { useState } from 'react';
 import { useSystemData } from '../hooks/useSystemData';
 
-const GpuIcon: React.FC = () => (
-    <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 text-highlight-cyan flex-shrink-0 mr-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1}>
-        <path strokeLinecap="round" strokeLinejoin="round" d="M2 7h20v10H2z" />
-        <path strokeLinecap="round" strokeLinejoin="round" d="M6 12a2 2 0 100-4 2 2 0 000 4zM14 12a2 2 0 100-4 2 2 0 000 4z" />
-        <path strokeLinecap="round" strokeLinejoin="round" d="M2 17h3m14 0h3" />
-    </svg>
-);
-
 const InfoCard: React.FC<{ title: string; children: React.ReactNode }> = ({ title, children }) => (
-    <div className="bg-secondary p-6 rounded-xl border border-accent-blue/20">
+    <div className="bg-secondary p-6 rounded-xl border border-accent-blue/20 h-full">
         <h3 className="text-xl font-bold text-highlight-cyan mb-4">{title}</h3>
         <div className="space-y-3">{children}</div>
     </div>
 );
 
 const InfoItem: React.FC<{ label: string; value: React.ReactNode }> = ({ label, value }) => (
-    <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center text-sm">
+    <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center text-sm border-b border-accent-blue/10 pb-2 last:border-0 last:pb-0">
         <p className="text-accent-light">{label}</p>
-        <p className="text-text-main font-mono text-left sm:text-right">{value}</p>
+        <div className="text-text-main font-mono text-left sm:text-right">
+            {value !== undefined && value !== null && value !== '' ? value : <span className="text-accent-blue/30 italic">N/A</span>}
+        </div>
     </div>
 );
-
-const UsageBar: React.FC<{ value: number; total: number; color: string; unit: string }> = ({ value, total, color, unit }) => {
-    const percentage = total > 0 ? (value / total) * 100 : 0;
-    return (
-        <div>
-            <div className="flex justify-between items-center mb-1 text-xs font-mono">
-                <span className="text-text-main">{value.toFixed(2)} {unit} / {total.toFixed(2)} {unit}</span>
-                <span style={{ color }}>{percentage.toFixed(1)}%</span>
-            </div>
-            <div className="w-full bg-primary rounded-full h-2 border border-accent-blue/50">
-                <div className="h-1.5 rounded-full" style={{ width: `${percentage}%`, backgroundColor: color }}></div>
-            </div>
-        </div>
-    );
-};
-
-interface TabButtonProps {
-    label: string;
-    tabKey: string;
-    activeTab: string;
-    setActiveTab: (key: string) => void;
-}
-
-const TabButton: React.FC<TabButtonProps> = ({ label, tabKey, activeTab, setActiveTab }) => {
-    const isActive = activeTab === tabKey;
-    const baseClasses = "px-6 py-3 text-sm font-bold transition-colors duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-highlight-cyan rounded-t-lg";
-    const activeClasses = "border-b-2 border-highlight-cyan text-highlight-cyan";
-    const inactiveClasses = "text-accent-light hover:text-white border-b-2 border-transparent";
-    return (
-        <button
-            onClick={() => setActiveTab(tabKey)}
-            className={`${baseClasses} ${isActive ? activeClasses : inactiveClasses}`}
-            role="tab"
-            aria-selected={isActive}
-            aria-controls={`tabpanel-${tabKey}`}
-            id={`tab-${tabKey}`}
-        >
-            {label.toUpperCase()}
-        </button>
-    );
-};
-
-interface TabPanelProps {
-    children: React.ReactNode;
-    tabKey: string;
-    activeTab: string;
-}
-
-const TabPanel: React.FC<TabPanelProps> = ({ children, tabKey, activeTab }) => {
-    const isHidden = activeTab !== tabKey;
-    return (
-        <div
-            hidden={isHidden}
-            role="tabpanel"
-            id={`tabpanel-${tabKey}`}
-            aria-labelledby={`tab-${tabKey}`}
-            className="animate-fade-in-up"
-        >
-            {!isHidden && children}
-        </div>
-    );
-};
-
 
 const SystemInfoPage = () => {
     const { data, loading, error } = useSystemData();
     const [activeTab, setActiveTab] = useState('system');
 
-    if (loading) {
-        return <div className="text-center text-accent-light">Loading system information...</div>;
-    }
+    if (loading) return <div className="p-12 text-center text-accent-light animate-pulse">Querying System Information...</div>;
+    if (error) return <div className="p-12 text-center text-red-400 border border-red-500/20 rounded-lg mx-8 mt-8">System API Error: {error}</div>;
+    if (!data) return null;
 
-    if (error) {
-        return <div className="text-center text-red-500">Error loading data: {error}</div>;
-    }
-
-    // Explicit check for system_info to prevent "Cannot read properties of undefined" crash
-    if (!data || !data.system_info) {
-        return (
-            <div className="text-center p-8 bg-secondary rounded-xl border border-red-500/30">
-                <h3 className="text-xl font-bold text-red-400 mb-2">Data Incomplete</h3>
-                <p className="text-accent-light">
-                    The server returned data, but the System Information block is missing.
-                    <br />
-                    Please check the backend API response structure.
-                </p>
-                <div className="mt-4 p-2 bg-primary text-xs font-mono text-left overflow-auto max-h-40 rounded">
-                    {JSON.stringify(data, null, 2)}
-                </div>
-            </div>
-        );
-    }
+    // Destructure safe references
+    const { system_info, gpus, storage_status, comfyui_paths } = data;
 
     return (
         <div className="animate-fade-in-up space-y-8">
-            <h2 className="text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-highlight-green to-highlight-cyan">System Overview</h2>
+            <h2 className="text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-highlight-green to-highlight-cyan">System Configuration</h2>
             
-            <div className="w-full">
-                <div className="flex border-b border-accent-blue/20" role="tablist" aria-label="System Information Tabs">
-                    <TabButton label="System" tabKey="system" activeTab={activeTab} setActiveTab={setActiveTab} />
-                    <TabButton label="Hardware" tabKey="hardware" activeTab={activeTab} setActiveTab={setActiveTab} />
-                    <TabButton label="Service Details" tabKey="services" activeTab={activeTab} setActiveTab={setActiveTab} />
-                </div>
-                
-                <div className="mt-8">
-                    <TabPanel tabKey="system" activeTab={activeTab}>
-                        <InfoCard title="System Information">
-                            <InfoItem label="OS" value={`${data.system_info.os_name || 'N/A'} ${data.system_info.os_version || ''}`} />
-                            <InfoItem label="Kernel" value={data.system_info.kernel_version || 'N/A'} />
-                            <InfoItem label="Architecture" value={data.system_info.architecture || 'N/A'} />
-                            <InfoItem label="CPU" value={data.system_info.cpu_info || 'N/A'} />
-                            <InfoItem label="Total RAM" value={`${data.system_info.total_ram_gb?.toFixed(2) || 0} GB`} />
-                            <InfoItem label="Python Version" value={data.system_info.python_version || 'N/A'} />
-                            <InfoItem label="ComfyUI Git Hash" value={data.system_info.comfyui_git_version || 'N/A'} />
-                        </InfoCard>
-                    </TabPanel>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                {/* Static System Info */}
+                <InfoCard title="Host Details">
+                    <InfoItem label="Hostname" value={system_info?.hostname} />
+                    <InfoItem label="OS" value={`${system_info?.os_name} ${system_info?.os_version}`} />
+                    <InfoItem label="Kernel" value={system_info?.kernel_version} />
+                    <InfoItem label="Architecture" value={system_info?.architecture} />
+                    <InfoItem label="Python Env" value={system_info?.python_version} />
+                </InfoCard>
 
-                    <TabPanel tabKey="hardware" activeTab={activeTab}>
-                        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                            <InfoCard title="GPU Status">
-                                {data.gpu_status?.map((gpu, index) => (
-                                    <div key={index} className="bg-primary p-4 rounded-lg flex items-center">
-                                        <GpuIcon />
-                                        <div className="flex-grow">
-                                            <p className="font-bold text-highlight-green mb-1">{gpu.name}</p>
-                                            <UsageBar value={gpu.vram_used_mb} total={gpu.vram_total_mb} color="#00F5D4" unit="MB" />
+                {/* CPU Info */}
+                <InfoCard title="Processor">
+                    <InfoItem label="Model" value={system_info?.cpu_model} />
+                    {/* Add more static CPU details if API provides them */}
+                </InfoCard>
+
+                 {/* Storage Info */}
+                 <div className="md:col-span-2">
+                    <InfoCard title="Storage Subsystem">
+                        {storage_status && storage_status.length > 0 ? (
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                {storage_status.map((disk, idx) => (
+                                    <div key={idx} className="bg-primary p-4 rounded-lg border border-accent-blue/10">
+                                        <div className="flex justify-between items-center mb-2">
+                                            <span className="font-bold text-highlight-green">{disk.path}</span>
+                                            <span className="text-xs text-accent-light">{disk.filesystem_type}</span>
+                                        </div>
+                                        <p className="text-xs text-accent-light mb-2">{disk.description}</p>
+                                        <div className="w-full bg-secondary h-2 rounded-full overflow-hidden">
+                                            <div 
+                                                className="bg-highlight-cyan h-full" 
+                                                style={{ width: `${(disk.used_gb / disk.total_gb) * 100}%` }}
+                                            />
+                                        </div>
+                                        <div className="flex justify-between text-xs mt-1 font-mono">
+                                            <span>{disk.used_gb.toFixed(1)} GB Used</span>
+                                            <span>{disk.total_gb.toFixed(1)} GB Total</span>
                                         </div>
                                     </div>
-                                )) || <p className="text-accent-light">No GPU data found</p>}
-                            </InfoCard>
-                             <InfoCard title="Storage Status">
-                                {data.storage_status?.map((disk, index) => (
-                                    <div key={index} className="space-y-2 bg-primary p-3 rounded-lg">
-                                         <p className="font-bold text-highlight-green">{disk.description || disk.path}</p>
-                                         <UsageBar value={disk.used_gb} total={disk.total_gb} color={["#9AE19D", "#FFD700", "#83C5BE"][index % 3]} unit="GB" />
-                                    </div>
-                                )) || <p className="text-accent-light">No storage data found</p>}
-                            </InfoCard>
-                        </div>
-                    </TabPanel>
-                    
-                    <TabPanel tabKey="services" activeTab={activeTab}>
-                        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                            <InfoCard title="Ollama Service">
-                                {data.ollama_status ? (
-                                    <>
-                                        <InfoItem label="Service Status" value={
-                                            <span className={data.ollama_status.status === 'running' ? 'text-highlight-green' : 'text-red-400'}>
-                                                {data.ollama_status.status}
-                                            </span>
-                                        } />
-                                        <InfoItem label="Version" value={data.ollama_status.version} />
-                                        <InfoItem label="Installed Models" value={data.ollama_status.installed_models?.length || 0} />
-                                    </>
-                                ) : <p className="text-accent-light">Ollama data unavailable</p>}
-                            </InfoCard>
-                            <InfoCard title="ComfyUI Paths">
-                                {data.comfyui_paths ? Object.entries(data.comfyui_paths).map(([key, value]) => (
-                                    <InfoItem key={key} label={key.replace(/_/g, ' ')} value={
-                                        <span className={(value as string).startsWith('Path not found') ? 'text-red-400/70' : ''}>
-                                            {(value as string).replace('/opt/ki_project/ComfyUI', '...')}
-                                        </span>
-                                    } />
-                                )) : <p className="text-accent-light">ComfyUI paths unavailable</p>}
-                            </InfoCard>
-                        </div>
-                    </TabPanel>
-                </div>
+                                ))}
+                            </div>
+                        ) : (
+                            <p className="text-accent-light italic">No storage volumes reported.</p>
+                        )}
+                    </InfoCard>
+                 </div>
+
+                 {/* Paths Info */}
+                 <div className="md:col-span-2">
+                     <InfoCard title="Application Paths">
+                        {comfyui_paths ? Object.entries(comfyui_paths).map(([key, val]) => (
+                             <InfoItem key={key} label={key.toUpperCase().replace('_', ' ')} value={val as string} />
+                        )) : <p>Path configuration unavailable</p>}
+                     </InfoCard>
+                 </div>
             </div>
         </div>
     );
