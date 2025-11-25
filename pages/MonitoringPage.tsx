@@ -1,6 +1,5 @@
 import React from 'react';
 import { useSystemData } from '../hooks/useSystemData';
-import { SystemInfo } from '../types';
 
 interface UsageBarProps {
     value: number;
@@ -17,26 +16,12 @@ const UsageBar: React.FC<UsageBarProps> = ({ value, total, color, unit = 'GB' })
                 <span className="text-text-main">{value.toFixed(2)} {unit} / {total.toFixed(2)} {unit}</span>
                 <span style={{ color }}>{percentage.toFixed(1)}%</span>
             </div>
-            <div className="w-full bg-primary rounded-full h-2.5 border border-accent-blue/50 overflow-hidden">
-                <div className="h-2.5 rounded-full transition-all duration-500 ease-out" style={{ width: `${percentage}%`, backgroundColor: color }}></div>
+            <div className="w-full bg-primary rounded-full h-2.5 border border-accent-blue/50">
+                <div className="h-2.5 rounded-full" style={{ width: `${percentage}%`, backgroundColor: color }}></div>
             </div>
         </div>
     );
 };
-
-// A placeholder bar for when data is missing but expected (e.g. live polling is off or initializing)
-const SkeletonBar: React.FC = () => (
-    <div>
-        <div className="flex justify-between items-center mb-1 text-sm font-mono">
-             <span className="text-accent-blue/40 text-xs">Waiting for signal...</span>
-             <span className="text-accent-blue/40 text-xs">--%</span>
-        </div>
-        <div className="w-full bg-primary rounded-full h-2.5 border border-accent-blue/20 overflow-hidden relative">
-            <div className="absolute inset-0 bg-accent-blue/10 animate-pulse"></div>
-            <div className="absolute top-0 bottom-0 left-0 w-1/3 bg-gradient-to-r from-transparent via-accent-blue/20 to-transparent animate-[shimmer_2s_infinite]"></div>
-        </div>
-    </div>
-);
 
 interface MonitoringCardProps {
     title: string;
@@ -44,7 +29,7 @@ interface MonitoringCardProps {
 }
 
 const MonitoringCard: React.FC<MonitoringCardProps> = ({ title, children }) => (
-    <div className="bg-secondary p-6 rounded-xl border border-accent-blue/20 min-h-[150px] flex flex-col justify-center shadow-lg shadow-black/20">
+    <div className="bg-secondary p-6 rounded-xl border border-accent-blue/20 min-h-[150px] flex flex-col justify-center">
         <h3 className="text-xl font-bold text-highlight-green mb-4">{title}</h3>
         {children}
     </div>
@@ -59,24 +44,16 @@ const MonitoringPage = () => {
         usingFallback
     } = useSystemData();
 
-    // Defensive: Allow partial rendering even if loading or error, if we have stale data
-    if (loading && !data) return <p className="text-center text-accent-light mt-10 animate-pulse">Establishing connection to telemetry services...</p>;
-    
-    // Defensive defaults: Ensure destructuring doesn't crash if data is partial
-    const systemInfo: Partial<SystemInfo> = data?.system_info || {};
-    const gpuStatus = data?.gpu_status || [];
-    const storageStatus = data?.storage_status || [];
+    if (loading && !data) return <p className="text-center text-accent-light">Loading monitoring data...</p>;
+    if (error && !data) return <p className="text-center text-red-400">Error: {error}</p>;
+    if (!data) return <p className="text-center text-accent-light">No data available.</p>;
+
+    const { system_info } = data;
 
     return (
         <div className="animate-fade-in-up">
             <h2 className="text-3xl font-bold mb-4 bg-clip-text text-transparent bg-gradient-to-r from-highlight-green to-highlight-cyan">Server Performance Monitor</h2>
             
-            {error && !data && (
-                 <div className="bg-red-900/30 border border-red-500/50 p-4 rounded-lg mb-8 text-center text-red-300">
-                    <p>Telemetry Service Unreachable: {error}</p>
-                 </div>
-            )}
-
             {usingFallback && (
                 <div className="bg-yellow-900/30 border border-yellow-600/50 p-4 rounded-lg mb-8 flex items-start gap-4 animate-fade-in-up">
                     <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-yellow-500 mt-0.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -85,7 +62,8 @@ const MonitoringPage = () => {
                     <div>
                         <p className="text-yellow-200 font-bold text-sm">Offline / Fallback Mode</p>
                         <p className="text-yellow-100/70 text-sm mt-1">
-                            Unable to connect to the live monitoring server. Displaying cached system information.
+                            Unable to connect to the live monitoring server. Displaying cached system information from <code>application.json</code>. 
+                            Check your Settings IP configuration or ensure the backend service is running.
                         </p>
                     </div>
                 </div>
@@ -93,89 +71,67 @@ const MonitoringPage = () => {
 
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
                 <MonitoringCard title="CPU Information">
-                    <p className="text-md font-mono text-text-main mb-2 truncate" title={systemInfo.cpu_info}>
-                        {systemInfo.cpu_info || "Scanning CPU..."}
-                    </p>
-                    {systemInfo.cpu_usage_percent !== undefined ? (
+                    <p className="text-md font-mono text-text-main mb-2">{system_info.cpu_info}</p>
+                    {system_info.cpu_usage_percent !== undefined ? (
                         <UsageBar 
-                            value={systemInfo.cpu_usage_percent} 
+                            value={system_info.cpu_usage_percent} 
                             total={100} 
                             color="#00F5D4" 
                             unit="%" 
                         />
                     ) : (
-                        <SkeletonBar />
+                        <p className="text-sm text-accent-light">Live CPU data unavailable</p>
                     )}
                 </MonitoringCard>
 
                 <MonitoringCard title="Memory (RAM)">
-                    <p className="text-md font-mono text-highlight-green mb-2">
-                        Total: {systemInfo.total_ram_gb !== undefined ? `${systemInfo.total_ram_gb.toFixed(2)} GB` : "--- GB"}
-                    </p>
-                    {systemInfo.ram_used_gb !== undefined && systemInfo.total_ram_gb !== undefined ? (
+                    <p className="text-md font-mono text-highlight-green mb-2">Total: {system_info.total_ram_gb.toFixed(2)} GB</p>
+                    {system_info.ram_used_gb !== undefined ? (
                         <UsageBar 
-                            value={systemInfo.ram_used_gb} 
-                            total={systemInfo.total_ram_gb} 
+                            value={system_info.ram_used_gb} 
+                            total={system_info.total_ram_gb} 
                             color="#BE95C4" 
                         />
                     ) : (
-                        <SkeletonBar />
+                        <p className="text-sm text-accent-light">Live RAM data unavailable</p>
                     )}
                 </MonitoringCard>
 
                 <MonitoringCard title="Disk I/O (Current)">
-                    {systemInfo.disk_io_read_mbps !== undefined && systemInfo.disk_io_write_mbps !== undefined ? (
+                    {system_info.disk_io_read_mbps !== undefined && system_info.disk_io_write_mbps !== undefined ? (
                         <div className="grid grid-cols-2 gap-4">
-                            <div className="bg-primary p-3 rounded-lg text-center border border-accent-blue/10">
+                            <div className="bg-primary p-3 rounded-lg text-center">
                                 <p className="text-xs text-accent-light uppercase">Read</p>
-                                <p className="text-xl font-mono text-highlight-cyan">{systemInfo.disk_io_read_mbps.toFixed(2)} MB/s</p>
+                                <p className="text-xl font-mono text-highlight-cyan">{system_info.disk_io_read_mbps.toFixed(2)} MB/s</p>
                             </div>
-                            <div className="bg-primary p-3 rounded-lg text-center border border-accent-blue/10">
+                            <div className="bg-primary p-3 rounded-lg text-center">
                                 <p className="text-xs text-accent-light uppercase">Write</p>
-                                <p className="text-xl font-mono text-highlight-green">{systemInfo.disk_io_write_mbps.toFixed(2)} MB/s</p>
+                                <p className="text-xl font-mono text-highlight-green">{system_info.disk_io_write_mbps.toFixed(2)} MB/s</p>
                             </div>
                         </div>
                     ) : (
-                        <div className="grid grid-cols-2 gap-4">
-                             <div className="bg-primary p-3 rounded-lg text-center border border-accent-blue/10 opacity-50">
-                                <p className="text-xs text-accent-light uppercase">Read</p>
-                                <p className="text-xl font-mono text-accent-light animate-pulse">--.--</p>
-                            </div>
-                            <div className="bg-primary p-3 rounded-lg text-center border border-accent-blue/10 opacity-50">
-                                <p className="text-xs text-accent-light uppercase">Write</p>
-                                <p className="text-xl font-mono text-accent-light animate-pulse">--.--</p>
-                            </div>
-                        </div>
+                        <p className="text-2xl font-mono text-accent-light">Waiting for data...</p>
                     )}
                 </MonitoringCard>
 
                  <MonitoringCard title="Network Traffic (Current)">
-                    {systemInfo.network_rx_mbps !== undefined && systemInfo.network_tx_mbps !== undefined ? (
+                    {system_info.network_rx_mbps !== undefined && system_info.network_tx_mbps !== undefined ? (
                         <div className="grid grid-cols-2 gap-4">
-                            <div className="bg-primary p-3 rounded-lg text-center border border-accent-blue/10">
+                            <div className="bg-primary p-3 rounded-lg text-center">
                                 <p className="text-xs text-accent-light uppercase">Download</p>
-                                <p className="text-xl font-mono text-highlight-cyan">{systemInfo.network_rx_mbps.toFixed(2)} MB/s</p>
+                                <p className="text-xl font-mono text-highlight-cyan">{system_info.network_rx_mbps.toFixed(2)} MB/s</p>
                             </div>
-                            <div className="bg-primary p-3 rounded-lg text-center border border-accent-blue/10">
+                            <div className="bg-primary p-3 rounded-lg text-center">
                                 <p className="text-xs text-accent-light uppercase">Upload</p>
-                                <p className="text-xl font-mono text-highlight-green">{systemInfo.network_tx_mbps.toFixed(2)} MB/s</p>
+                                <p className="text-xl font-mono text-highlight-green">{system_info.network_tx_mbps.toFixed(2)} MB/s</p>
                             </div>
                         </div>
                     ) : (
-                        <div className="grid grid-cols-2 gap-4">
-                            <div className="bg-primary p-3 rounded-lg text-center border border-accent-blue/10 opacity-50">
-                                <p className="text-xs text-accent-light uppercase">Download</p>
-                                <p className="text-xl font-mono text-accent-light animate-pulse">--.--</p>
-                            </div>
-                            <div className="bg-primary p-3 rounded-lg text-center border border-accent-blue/10 opacity-50">
-                                <p className="text-xs text-accent-light uppercase">Upload</p>
-                                <p className="text-xl font-mono text-accent-light animate-pulse">--.--</p>
-                            </div>
-                        </div>
+                        <p className="text-2xl font-mono text-accent-light">Waiting for data...</p>
                     )}
                 </MonitoringCard>
 
-                {gpuStatus.length > 0 ? gpuStatus.map((gpu, index) => (
+                {data.gpu_status.map((gpu, index) => (
                      <MonitoringCard key={index} title={`${gpu.name} VRAM`}>
                         <UsageBar 
                             value={gpu.vram_used_mb / 1024} 
@@ -183,16 +139,9 @@ const MonitoringPage = () => {
                             color={index === 0 ? "#BE95C4" : "#F3B391"} 
                         />
                     </MonitoringCard>
-                )) : (
-                     <MonitoringCard title="GPU VRAM">
-                        <div className="text-center text-accent-light text-sm italic">
-                            No GPU telemetry available.
-                        </div>
-                        <div className="mt-4 opacity-30"><SkeletonBar /></div>
-                    </MonitoringCard>
-                )}
+                ))}
 
-                {storageStatus.length > 0 ? storageStatus.map((disk, index) => (
+                {data.storage_status.map((disk, index) => (
                     <MonitoringCard key={index} title={disk.description || disk.path}>
                         <UsageBar 
                             value={disk.used_gb} 
@@ -200,14 +149,7 @@ const MonitoringPage = () => {
                             color={["#A9E5BB", "#86BBD8", "#F4A261"][index % 3]} 
                         />
                     </MonitoringCard>
-                )) : (
-                    <MonitoringCard title="Storage Usage">
-                        <div className="text-center text-accent-light text-sm italic">
-                            No Storage telemetry available.
-                        </div>
-                        <div className="mt-4 opacity-30"><SkeletonBar /></div>
-                    </MonitoringCard>
-                )}
+                ))}
             </div>
         </div>
     );

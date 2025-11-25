@@ -55,14 +55,6 @@ const ComfyUIPage = () => {
     const comfyUiUrl = `http://${monitorIp}:8188`;
     const { data, loading, error } = useSystemData();
 
-    // Defensive defaults
-    const workflows = data?.workflows || [];
-    const modelsAndAssets = data?.models_and_assets || {
-        custom_nodes: [],
-        checkpoints: [],
-        loras: []
-    };
-
     return (
         <div className="flex flex-col h-full animate-fade-in-up space-y-6">
             <div className="flex justify-between items-center">
@@ -90,15 +82,20 @@ const ComfyUIPage = () => {
                         <h3 className="text-xl font-bold text-highlight-cyan">ComfyUI Assets</h3>
                     </div>
                     <div className="flex-grow overflow-y-auto">
-                        {loading && !data && <p className="p-4 text-accent-light animate-pulse">Loading assets...</p>}
-                        {error && !data && <p className="p-4 text-red-400">Error loading assets: {error}</p>}
-                        
-                        <div>
-                            <AccordionItem title="Workflows" items={workflows} />
-                            <AccordionItem title="Custom Nodes" items={modelsAndAssets.custom_nodes} />
-                            <AccordionItem title="Checkpoints" items={modelsAndAssets.checkpoints} />
-                            <AccordionItem title="LoRAs" items={modelsAndAssets.loras} />
-                        </div>
+                        {(loading || !data || !data.models_and_assets) ? (
+                            <div className="p-4">
+                                {loading && <p className="text-accent-light">Loading assets...</p>}
+                                {error && <p className="text-red-400">Error: {error}</p>}
+                                {!loading && !error && <p className="text-accent-light">Asset data structure incomplete.</p>}
+                            </div>
+                        ) : (
+                            <div>
+                                <AccordionItem title="Workflows" items={data.workflows} />
+                                <AccordionItem title="Custom Nodes" items={data.models_and_assets.custom_nodes} />
+                                <AccordionItem title="Checkpoints" items={data.models_and_assets.checkpoints} />
+                                <AccordionItem title="LoRAs" items={data.models_and_assets.loras} />
+                            </div>
+                        )}
                     </div>
                 </div>
             </div>

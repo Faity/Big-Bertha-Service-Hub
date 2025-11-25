@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { useSystemData } from '../hooks/useSystemData';
 
@@ -44,17 +45,16 @@ const OllamaPage = () => {
                             <span className={`animate-ping absolute inline-flex h-full w-full rounded-full ${serviceIsRunning ? 'bg-green-400' : 'bg-red-400'} opacity-75`}></span>
                             <span className={`relative inline-flex rounded-full h-3 w-3 ${serviceIsRunning ? 'bg-green-500' : 'bg-red-500'}`}></span>
                         </span>
-                        <span>{serviceIsRunning ? `Service Active (${ollamaStatus?.version || 'v?'})` : (loading ? 'Checking Status...' : 'Service Offline')}</span>
+                        <span>{serviceIsRunning ? `Service Active (${ollamaStatus?.version})` : 'Service Offline'}</span>
                     </div>
                 </div>
                 <div className="bg-secondary p-6 rounded-xl border border-accent-blue/20 flex-grow">
                     <h3 className="text-xl font-bold mb-4 text-highlight-green">Installed Models</h3>
-                    {loading && !ollamaStatus && <p className="text-accent-light animate-pulse">Loading models...</p>}
-                    {error && !ollamaStatus && <p className="text-red-400">Error: {error}</p>}
-                    
+                    {loading && <p className="text-accent-light">Loading models...</p>}
+                    {error && <p className="text-red-400">Error: {error}</p>}
                     {ollamaStatus?.installed_models ? (
                         <ul className="space-y-3">
-                            {ollamaStatus.installed_models.length > 0 ? ollamaStatus.installed_models.map(model => (
+                            {ollamaStatus.installed_models.map(model => (
                                 <li key={model.name} className="bg-primary p-3 rounded-lg flex justify-between items-center text-sm">
                                     <div>
                                         <p className="font-mono text-text-main">{model.name}</p>
@@ -62,12 +62,10 @@ const OllamaPage = () => {
                                     </div>
                                     <span className="text-accent-light font-mono bg-accent-blue/20 px-2 py-1 rounded text-xs">{model.size}</span>
                                 </li>
-                            )) : (
-                                <li className="text-accent-light italic">No models found installed.</li>
-                            )}
+                            ))}
                         </ul>
                     ) : (
-                        !loading && <p className="text-accent-light">Model list unavailable.</p>
+                        !loading && <p className="text-accent-light">No models found.</p>
                     )}
                 </div>
             </div>
