@@ -13,6 +13,14 @@ export interface SystemInfo {
     total_ram_gb: number;
     cpu_info: string;
     comfyui_git_version: string;
+    // Live monitoring fields
+    cpu_usage_percent?: number;
+    ram_used_gb?: number;
+    ram_used_percent?: number;
+    disk_io_read_mbps?: number;
+    disk_io_write_mbps?: number;
+    network_rx_mbps?: number;
+    network_tx_mbps?: number;
 }
 
 export interface GpuStatus {

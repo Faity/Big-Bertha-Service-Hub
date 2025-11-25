@@ -10,21 +10,38 @@ const GpuIcon = () => (
     </svg>
 );
 
-const InfoCard = ({ title, children }: { title: string, children: React.ReactNode }) => (
+interface InfoCardProps {
+    title: string;
+    children: React.ReactNode;
+}
+
+const InfoCard: React.FC<InfoCardProps> = ({ title, children }) => (
     <div className="bg-secondary p-6 rounded-xl border border-accent-blue/20">
         <h3 className="text-xl font-bold text-highlight-cyan mb-4">{title}</h3>
         <div className="space-y-3">{children}</div>
     </div>
 );
 
-const InfoItem = ({ label, value }: { label: string, value: React.ReactNode }) => (
+interface InfoItemProps {
+    label: string;
+    value: React.ReactNode;
+}
+
+const InfoItem: React.FC<InfoItemProps> = ({ label, value }) => (
     <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center text-sm">
         <p className="text-accent-light">{label}</p>
         <p className="text-text-main font-mono text-left sm:text-right">{value}</p>
     </div>
 );
 
-const UsageBar = ({ value, total, color, unit }: { value: number, total: number, color: string, unit: string }) => {
+interface UsageBarProps {
+    value: number;
+    total: number;
+    color: string;
+    unit: string;
+}
+
+const UsageBar: React.FC<UsageBarProps> = ({ value, total, color, unit }) => {
     const percentage = total > 0 ? (value / total) * 100 : 0;
     return (
         <div>
@@ -39,7 +56,14 @@ const UsageBar = ({ value, total, color, unit }: { value: number, total: number,
     );
 };
 
-const TabButton = ({ label, tabKey, activeTab, setActiveTab }: { label: string, tabKey: string, activeTab: string, setActiveTab: (key: string) => void }) => {
+interface TabButtonProps {
+    label: string;
+    tabKey: string;
+    activeTab: string;
+    setActiveTab: (key: string) => void;
+}
+
+const TabButton: React.FC<TabButtonProps> = ({ label, tabKey, activeTab, setActiveTab }) => {
     const isActive = activeTab === tabKey;
     const baseClasses = "px-6 py-3 text-sm font-bold transition-colors duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-highlight-cyan rounded-t-lg";
     const activeClasses = "border-b-2 border-highlight-cyan text-highlight-cyan";
@@ -58,7 +82,13 @@ const TabButton = ({ label, tabKey, activeTab, setActiveTab }: { label: string, 
     );
 };
 
-const TabPanel = ({ children, tabKey, activeTab }: { children: React.ReactNode, tabKey: string, activeTab: string }) => {
+interface TabPanelProps {
+    children: React.ReactNode;
+    tabKey: string;
+    activeTab: string;
+}
+
+const TabPanel: React.FC<TabPanelProps> = ({ children, tabKey, activeTab }) => {
     const isHidden = activeTab !== tabKey;
     return (
         <div
@@ -152,8 +182,8 @@ const SystemInfoPage = () => {
                             <InfoCard title="ComfyUI Paths">
                                 {Object.entries(data.comfyui_paths).map(([key, value]) => (
                                     <InfoItem key={key} label={key.replace(/_/g, ' ')} value={
-                                        <span className={value.startsWith('Path not found') ? 'text-red-400/70' : ''}>
-                                            {value.replace('/opt/ki_project/ComfyUI', '...')}
+                                        <span className={(value as string).startsWith('Path not found') ? 'text-red-400/70' : ''}>
+                                            {(value as string).replace('/opt/ki_project/ComfyUI', '...')}
                                         </span>
                                     } />
                                 ))}

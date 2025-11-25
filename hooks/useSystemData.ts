@@ -10,20 +10,29 @@ export const useSystemData = () => {
     useEffect(() => {
         const fetchData = async () => {
             try {
-                const response = await fetch('/application.json');
+                // Poll the local server API
+                const response = await fetch('http://127.0.0.1:8010/api/sysmon');
                 if (!response.ok) {
                     throw new Error(`HTTP error! status: ${response.status}`);
                 }
                 const jsonData: SystemData = await response.json();
                 setData(jsonData);
+                setError(null); // Clear error on successful fetch
             } catch (e: any) {
+                console.error("Failed to fetch system data:", e);
                 setError(e.message);
             } finally {
                 setLoading(false);
             }
         };
 
+        // Initial fetch
         fetchData();
+
+        // Poll every 3 seconds (3000ms)
+        const intervalId = setInterval(fetchData, 3000);
+
+        return () => clearInterval(intervalId);
     }, []);
 
     return { data, loading, error };

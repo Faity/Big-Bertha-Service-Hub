@@ -50,7 +50,8 @@ const AccordionItem = ({ title, items }: { title: string, items: string[] | unde
 
 
 const ComfyUIPage = () => {
-    const comfyUiUrl = 'http://localhost:8188';
+    // URL updated for server deployment
+    const comfyUiUrl = 'http://127.0.0.1:8188';
     const { data, loading, error } = useSystemData();
 
     return (
