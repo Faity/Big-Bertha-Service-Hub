@@ -1,8 +1,7 @@
-
 import React, { useState } from 'react';
 import { useSystemData } from '../hooks/useSystemData';
 
-const GpuIcon = () => (
+const GpuIcon: React.FC = () => (
     <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 text-highlight-cyan flex-shrink-0 mr-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1}>
         <path strokeLinecap="round" strokeLinejoin="round" d="M2 7h20v10H2z" />
         <path strokeLinecap="round" strokeLinejoin="round" d="M6 12a2 2 0 100-4 2 2 0 000 4zM14 12a2 2 0 100-4 2 2 0 000 4z" />
@@ -10,38 +9,21 @@ const GpuIcon = () => (
     </svg>
 );
 
-interface InfoCardProps {
-    title: string;
-    children: React.ReactNode;
-}
-
-const InfoCard: React.FC<InfoCardProps> = ({ title, children }) => (
+const InfoCard: React.FC<{ title: string; children: React.ReactNode }> = ({ title, children }) => (
     <div className="bg-secondary p-6 rounded-xl border border-accent-blue/20">
         <h3 className="text-xl font-bold text-highlight-cyan mb-4">{title}</h3>
         <div className="space-y-3">{children}</div>
     </div>
 );
 
-interface InfoItemProps {
-    label: string;
-    value: React.ReactNode;
-}
-
-const InfoItem: React.FC<InfoItemProps> = ({ label, value }) => (
+const InfoItem: React.FC<{ label: string; value: React.ReactNode }> = ({ label, value }) => (
     <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center text-sm">
         <p className="text-accent-light">{label}</p>
         <p className="text-text-main font-mono text-left sm:text-right">{value}</p>
     </div>
 );
 
-interface UsageBarProps {
-    value: number;
-    total: number;
-    color: string;
-    unit: string;
-}
-
-const UsageBar: React.FC<UsageBarProps> = ({ value, total, color, unit }) => {
+const UsageBar: React.FC<{ value: number; total: number; color: string; unit: string }> = ({ value, total, color, unit }) => {
     const percentage = total > 0 ? (value / total) * 100 : 0;
     return (
         <div>
@@ -116,8 +98,21 @@ const SystemInfoPage = () => {
         return <div className="text-center text-red-500">Error loading data: {error}</div>;
     }
 
-    if (!data) {
-        return <div className="text-center text-accent-light">No system information available.</div>;
+    // Explicit check for system_info to prevent "Cannot read properties of undefined" crash
+    if (!data || !data.system_info) {
+        return (
+            <div className="text-center p-8 bg-secondary rounded-xl border border-red-500/30">
+                <h3 className="text-xl font-bold text-red-400 mb-2">Data Incomplete</h3>
+                <p className="text-accent-light">
+                    The server returned data, but the System Information block is missing.
+                    <br />
+                    Please check the backend API response structure.
+                </p>
+                <div className="mt-4 p-2 bg-primary text-xs font-mono text-left overflow-auto max-h-40 rounded">
+                    {JSON.stringify(data, null, 2)}
+                </div>
+            </div>
+        );
     }
 
     return (
@@ -134,20 +129,20 @@ const SystemInfoPage = () => {
                 <div className="mt-8">
                     <TabPanel tabKey="system" activeTab={activeTab}>
                         <InfoCard title="System Information">
-                            <InfoItem label="OS" value={`${data.system_info.os_name} ${data.system_info.os_version}`} />
-                            <InfoItem label="Kernel" value={data.system_info.kernel_version} />
-                            <InfoItem label="Architecture" value={data.system_info.architecture} />
-                            <InfoItem label="CPU" value={data.system_info.cpu_info} />
-                            <InfoItem label="Total RAM" value={`${data.system_info.total_ram_gb.toFixed(2)} GB`} />
-                            <InfoItem label="Python Version" value={data.system_info.python_version} />
-                            <InfoItem label="ComfyUI Git Hash" value={data.system_info.comfyui_git_version} />
+                            <InfoItem label="OS" value={`${data.system_info.os_name || 'N/A'} ${data.system_info.os_version || ''}`} />
+                            <InfoItem label="Kernel" value={data.system_info.kernel_version || 'N/A'} />
+                            <InfoItem label="Architecture" value={data.system_info.architecture || 'N/A'} />
+                            <InfoItem label="CPU" value={data.system_info.cpu_info || 'N/A'} />
+                            <InfoItem label="Total RAM" value={`${data.system_info.total_ram_gb?.toFixed(2) || 0} GB`} />
+                            <InfoItem label="Python Version" value={data.system_info.python_version || 'N/A'} />
+                            <InfoItem label="ComfyUI Git Hash" value={data.system_info.comfyui_git_version || 'N/A'} />
                         </InfoCard>
                     </TabPanel>
 
                     <TabPanel tabKey="hardware" activeTab={activeTab}>
                         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
                             <InfoCard title="GPU Status">
-                                {data.gpu_status.map((gpu, index) => (
+                                {data.gpu_status?.map((gpu, index) => (
                                     <div key={index} className="bg-primary p-4 rounded-lg flex items-center">
                                         <GpuIcon />
                                         <div className="flex-grow">
@@ -155,15 +150,15 @@ const SystemInfoPage = () => {
                                             <UsageBar value={gpu.vram_used_mb} total={gpu.vram_total_mb} color="#00F5D4" unit="MB" />
                                         </div>
                                     </div>
-                                ))}
+                                )) || <p className="text-accent-light">No GPU data found</p>}
                             </InfoCard>
                              <InfoCard title="Storage Status">
-                                {data.storage_status.map((disk, index) => (
+                                {data.storage_status?.map((disk, index) => (
                                     <div key={index} className="space-y-2 bg-primary p-3 rounded-lg">
                                          <p className="font-bold text-highlight-green">{disk.description || disk.path}</p>
                                          <UsageBar value={disk.used_gb} total={disk.total_gb} color={["#9AE19D", "#FFD700", "#83C5BE"][index % 3]} unit="GB" />
                                     </div>
-                                ))}
+                                )) || <p className="text-accent-light">No storage data found</p>}
                             </InfoCard>
                         </div>
                     </TabPanel>
@@ -171,22 +166,26 @@ const SystemInfoPage = () => {
                     <TabPanel tabKey="services" activeTab={activeTab}>
                         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
                             <InfoCard title="Ollama Service">
-                                <InfoItem label="Service Status" value={
-                                    <span className={data.ollama_status.status === 'running' ? 'text-highlight-green' : 'text-red-400'}>
-                                        {data.ollama_status.status}
-                                    </span>
-                                } />
-                                <InfoItem label="Version" value={data.ollama_status.version} />
-                                <InfoItem label="Installed Models" value={data.ollama_status.installed_models.length} />
+                                {data.ollama_status ? (
+                                    <>
+                                        <InfoItem label="Service Status" value={
+                                            <span className={data.ollama_status.status === 'running' ? 'text-highlight-green' : 'text-red-400'}>
+                                                {data.ollama_status.status}
+                                            </span>
+                                        } />
+                                        <InfoItem label="Version" value={data.ollama_status.version} />
+                                        <InfoItem label="Installed Models" value={data.ollama_status.installed_models?.length || 0} />
+                                    </>
+                                ) : <p className="text-accent-light">Ollama data unavailable</p>}
                             </InfoCard>
                             <InfoCard title="ComfyUI Paths">
-                                {Object.entries(data.comfyui_paths).map(([key, value]) => (
+                                {data.comfyui_paths ? Object.entries(data.comfyui_paths).map(([key, value]) => (
                                     <InfoItem key={key} label={key.replace(/_/g, ' ')} value={
                                         <span className={(value as string).startsWith('Path not found') ? 'text-red-400/70' : ''}>
                                             {(value as string).replace('/opt/ki_project/ComfyUI', '...')}
                                         </span>
                                     } />
-                                ))}
+                                )) : <p className="text-accent-light">ComfyUI paths unavailable</p>}
                             </InfoCard>
                         </div>
                     </TabPanel>
