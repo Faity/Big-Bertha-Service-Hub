@@ -26,7 +26,7 @@ const MetricCard = ({ title, children, color = "text-text-main" }: { title: stri
 
 const ProgressBar = ({ value, max, colorClass }: { value: number, max: number, colorClass: string }) => {
     const safeValue = value ?? 0;
-    const safeMax = max > 0 ? max : 100;
+    const safeMax = max > 0 ? max : 100; // Prevent division by zero
     const percent = Math.min(100, Math.max(0, (safeValue / safeMax) * 100));
     
     return (
@@ -71,7 +71,7 @@ const MonitoringPage = () => {
                     <ProgressBar value={os.cpu_usage_percent} max={100} colorClass="bg-highlight-cyan" />
                 </MetricCard>
 
-                {/* RAM Card */}
+                {/* RAM Card - Corrected to use os_status.ram_total_gb */}
                 <MetricCard title="Memory Usage" color="text-purple-400">
                     <div className="flex flex-col">
                         <span className="text-3xl font-mono font-bold text-white">
@@ -79,7 +79,7 @@ const MonitoringPage = () => {
                         </span>
                         <span className="text-xs text-accent-light">of {(os.ram_total_gb ?? 0).toFixed(1)} GB Total</span>
                     </div>
-                    <ProgressBar value={os.ram_used_gb} max={os.ram_total_gb} colorClass="bg-purple-500" />
+                    <ProgressBar value={os.ram_used_gb ?? 0} max={os.ram_total_gb ?? 1} colorClass="bg-purple-500" />
                 </MetricCard>
 
                 {/* Ambient Temp Card (iLO) */}
@@ -141,7 +141,7 @@ const MonitoringPage = () => {
                                 </div>
                             </div>
                             
-                            {/* VRAM Bar - Converted MB to GB */}
+                            {/* VRAM Bar - Corrected MB to GB Conversion */}
                             <div className="mb-4">
                                 <div className="flex justify-between text-xs mb-1">
                                     <span className="text-accent-light">VRAM Usage</span>
@@ -149,7 +149,12 @@ const MonitoringPage = () => {
                                         {((gpu.vram_used_mb ?? 0) / 1024).toFixed(2)} / {((gpu.vram_total_mb ?? 0) / 1024).toFixed(2)} GB
                                     </span>
                                 </div>
-                                <ProgressBar value={gpu.vram_used_mb} max={gpu.vram_total_mb} colorClass="bg-highlight-cyan" />
+                                {/* Calculating progress bar using GB values (or simplified MB/MB ratio which is the same) */}
+                                <ProgressBar 
+                                    value={gpu.vram_used_mb ?? 0} 
+                                    max={gpu.vram_total_mb ?? 1} 
+                                    colorClass="bg-highlight-cyan" 
+                                />
                             </div>
 
                              {/* Utilization Bar */}
