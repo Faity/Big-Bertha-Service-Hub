@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react';
 import { NavLink, Outlet } from 'react-router-dom';
 import SettingsModal from './SettingsModal';
 import { useSettings } from '../contexts/SettingsContext';
-import ServerOffButton from './ServerOffButton';
 import DownloadSourceButton from './DownloadSourceButton';
 
 const CpuChipIcon = () => (
@@ -101,7 +100,6 @@ const Layout = () => {
                         <span>Settings</span>
                     </button>
                     <DownloadSourceButton />
-                    {/* ServerOffButton intentionally hidden for now to match cleaner refactor */}
                     <div className="text-center pt-4 border-t border-accent-blue/10">
                       <p>HPE ML350 Gen10</p>
                       <p>&copy; 2024 Localhost Services</p>
