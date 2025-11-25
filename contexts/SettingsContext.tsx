@@ -9,6 +9,8 @@ interface SettingsContextType {
     setComfyUiPort: (port: string) => void;
     ollamaPort: string;
     setOllamaPort: (port: string) => void;
+    isSetup: boolean;
+    completeSetup: () => void;
 }
 
 const SettingsContext = createContext<SettingsContextType | undefined>(undefined);
@@ -23,6 +25,11 @@ export const SettingsProvider = ({ children }: { children?: ReactNode }) => {
     const [monitorPort, setMonitorPortState] = useState<string>(() => getStoredValue('MONITOR_API_PORT', '8010'));
     const [comfyUiPort, setComfyUiPortState] = useState<string>(() => getStoredValue('COMFYUI_PORT', '8188'));
     const [ollamaPort, setOllamaPortState] = useState<string>(() => getStoredValue('OLLAMA_PORT', '11434'));
+    
+    // Check if the user has completed the initial setup (saved settings at least once)
+    const [isSetup, setIsSetup] = useState<boolean>(() => {
+        return localStorage.getItem('APP_SETUP_COMPLETED') === 'true';
+    });
 
     const setMonitorIp = (ip: string) => {
         setMonitorIpState(ip);
@@ -44,12 +51,18 @@ export const SettingsProvider = ({ children }: { children?: ReactNode }) => {
         localStorage.setItem('OLLAMA_PORT', port);
     };
 
+    const completeSetup = () => {
+        setIsSetup(true);
+        localStorage.setItem('APP_SETUP_COMPLETED', 'true');
+    };
+
     return (
         <SettingsContext.Provider value={{ 
             monitorIp, setMonitorIp,
             monitorPort, setMonitorPort,
             comfyUiPort, setComfyUiPort,
-            ollamaPort, setOllamaPort
+            ollamaPort, setOllamaPort,
+            isSetup, completeSetup
         }}>
             {children}
         </SettingsContext.Provider>

@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { useSystemData } from '../hooks/useSystemData';
 
@@ -26,7 +25,11 @@ const MetricCard = ({ title, children, color = "text-text-main" }: { title: stri
 );
 
 const ProgressBar = ({ value, max, colorClass }: { value: number, max: number, colorClass: string }) => {
-    const percent = Math.min(100, Math.max(0, (value / max) * 100));
+    // Defensive check for inputs
+    const safeValue = value ?? 0;
+    const safeMax = max > 0 ? max : 100;
+    const percent = Math.min(100, Math.max(0, (safeValue / safeMax) * 100));
+    
     return (
         <div className="w-full bg-primary h-3 rounded-full overflow-hidden border border-accent-blue/30 mt-2">
             <div 
@@ -63,7 +66,7 @@ const MonitoringPage = () => {
                 {/* CPU Card */}
                 <MetricCard title="CPU Load" color="text-highlight-cyan">
                     <div className="flex items-end justify-between">
-                        <span className="text-4xl font-mono font-bold text-white">{os.cpu_usage_percent.toFixed(1)}%</span>
+                        <span className="text-4xl font-mono font-bold text-white">{(os.cpu_usage_percent ?? 0).toFixed(1)}%</span>
                         <span className="text-xs text-accent-light mb-1">Utilization</span>
                     </div>
                     <ProgressBar value={os.cpu_usage_percent} max={100} colorClass="bg-highlight-cyan" />
@@ -73,9 +76,9 @@ const MonitoringPage = () => {
                 <MetricCard title="Memory Usage" color="text-purple-400">
                     <div className="flex flex-col">
                         <span className="text-3xl font-mono font-bold text-white">
-                            {os.ram_used_gb.toFixed(1)} <span className="text-base text-accent-light">GB</span>
+                            {(os.ram_used_gb ?? 0).toFixed(1)} <span className="text-base text-accent-light">GB</span>
                         </span>
-                        <span className="text-xs text-accent-light">of {os.ram_total_gb.toFixed(1)} GB Total</span>
+                        <span className="text-xs text-accent-light">of {(os.ram_total_gb ?? 0).toFixed(1)} GB Total</span>
                     </div>
                     <ProgressBar value={os.ram_used_gb} max={os.ram_total_gb} colorClass="bg-purple-500" />
                 </MetricCard>
@@ -83,7 +86,7 @@ const MonitoringPage = () => {
                 {/* Ambient Temp Card (iLO) */}
                 <MetricCard title="Inlet Temp" color="text-orange-400">
                      <div className="flex items-center justify-center h-full">
-                        {ilo ? (
+                        {ilo && ilo.inlet_ambient_c !== undefined ? (
                              <div className="text-center">
                                 <span className="text-4xl font-mono font-bold text-white">{ilo.inlet_ambient_c}°C</span>
                                 <p className="text-xs text-accent-light mt-1">Ambient Sensor</p>
@@ -100,7 +103,7 @@ const MonitoringPage = () => {
                         {gpus.length > 0 ? (
                              <div className="text-center">
                                 <span className="text-4xl font-mono font-bold text-white">
-                                    {Math.max(...gpus.map(g => g.temperature_c))}°C
+                                    {Math.max(...gpus.map(g => g.temperature_c ?? 0))}°C
                                 </span>
                                 <p className="text-xs text-accent-light mt-1">Hotspot</p>
                             </div>
@@ -123,8 +126,8 @@ const MonitoringPage = () => {
                                     <span className="text-xs font-mono text-accent-light">ID: {gpu.index}</span>
                                 </div>
                                 <div className="text-right">
-                                    <span className={`text-xl font-bold ${gpu.temperature_c > 80 ? 'text-red-400' : 'text-green-400'}`}>
-                                        {gpu.temperature_c}°C
+                                    <span className={`text-xl font-bold ${(gpu.temperature_c ?? 0) > 80 ? 'text-red-400' : 'text-green-400'}`}>
+                                        {gpu.temperature_c ?? 'N/A'}°C
                                     </span>
                                     <p className="text-xs text-accent-light">Core Temp</p>
                                 </div>
@@ -134,7 +137,7 @@ const MonitoringPage = () => {
                             <div className="mb-4">
                                 <div className="flex justify-between text-xs mb-1">
                                     <span className="text-accent-light">VRAM Usage</span>
-                                    <span className="text-highlight-cyan">{gpu.vram_used_mb} / {gpu.vram_total_mb} MB</span>
+                                    <span className="text-highlight-cyan">{gpu.vram_used_mb ?? 0} / {gpu.vram_total_mb ?? 0} MB</span>
                                 </div>
                                 <ProgressBar value={gpu.vram_used_mb} max={gpu.vram_total_mb} colorClass="bg-highlight-cyan" />
                             </div>
@@ -143,7 +146,7 @@ const MonitoringPage = () => {
                              <div>
                                 <div className="flex justify-between text-xs mb-1">
                                     <span className="text-accent-light">Core Utilization</span>
-                                    <span className="text-highlight-green">{gpu.gpu_utilization_percent}%</span>
+                                    <span className="text-highlight-green">{gpu.gpu_utilization_percent ?? 0}%</span>
                                 </div>
                                 <ProgressBar value={gpu.gpu_utilization_percent} max={100} colorClass="bg-highlight-green" />
                             </div>

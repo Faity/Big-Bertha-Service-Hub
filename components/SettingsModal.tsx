@@ -11,7 +11,8 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose }) => {
         monitorIp, setMonitorIp,
         monitorPort, setMonitorPort,
         comfyUiPort, setComfyUiPort,
-        ollamaPort, setOllamaPort
+        ollamaPort, setOllamaPort,
+        completeSetup
     } = useSettings();
 
     const [ipInput, setIpInput] = useState(monitorIp);
@@ -32,6 +33,7 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose }) => {
         setMonitorPort(monitorPortInput);
         setComfyUiPort(comfyPortInput);
         setOllamaPort(ollamaPortInput);
+        completeSetup(); // Mark first-run setup as complete
         onClose();
     };
 
