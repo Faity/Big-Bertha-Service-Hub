@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { useSystemData } from '../hooks/useSystemData';
 
@@ -42,6 +41,7 @@ const MonitoringPage = () => {
         data, 
         loading, 
         error,
+        usingFallback
     } = useSystemData();
 
     if (loading && !data) return <p className="text-center text-accent-light">Loading monitoring data...</p>;
@@ -52,8 +52,23 @@ const MonitoringPage = () => {
 
     return (
         <div className="animate-fade-in-up">
-            <h2 className="text-3xl font-bold mb-8 bg-clip-text text-transparent bg-gradient-to-r from-highlight-green to-highlight-cyan">Server Performance Monitor</h2>
+            <h2 className="text-3xl font-bold mb-4 bg-clip-text text-transparent bg-gradient-to-r from-highlight-green to-highlight-cyan">Server Performance Monitor</h2>
             
+            {usingFallback && (
+                <div className="bg-yellow-900/30 border border-yellow-600/50 p-4 rounded-lg mb-8 flex items-start gap-4 animate-fade-in-up">
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-yellow-500 mt-0.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                    </svg>
+                    <div>
+                        <p className="text-yellow-200 font-bold text-sm">Offline / Fallback Mode</p>
+                        <p className="text-yellow-100/70 text-sm mt-1">
+                            Unable to connect to the live monitoring server. Displaying cached system information from <code>application.json</code>. 
+                            Check your Settings IP configuration or ensure the backend service is running.
+                        </p>
+                    </div>
+                </div>
+            )}
+
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
                 <MonitoringCard title="CPU Information">
                     <p className="text-md font-mono text-text-main mb-2">{system_info.cpu_info}</p>

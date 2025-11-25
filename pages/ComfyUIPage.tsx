@@ -1,6 +1,6 @@
-
 import React, { useState } from 'react';
 import { useSystemData } from '../hooks/useSystemData';
+import { useSettings } from '../contexts/SettingsContext';
 
 const AccordionItem = ({ title, items }: { title: string, items: string[] | undefined }) => {
     const [isOpen, setIsOpen] = useState(false);
@@ -50,8 +50,9 @@ const AccordionItem = ({ title, items }: { title: string, items: string[] | unde
 
 
 const ComfyUIPage = () => {
-    // URL updated for server deployment
-    const comfyUiUrl = 'http://127.0.0.1:8188';
+    const { monitorIp } = useSettings();
+    // Assuming ComfyUI runs on port 8188 on the same host as the monitor API
+    const comfyUiUrl = `http://${monitorIp}:8188`;
     const { data, loading, error } = useSystemData();
 
     return (
