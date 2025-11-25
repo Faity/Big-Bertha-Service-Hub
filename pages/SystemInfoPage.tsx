@@ -51,6 +51,7 @@ const SystemInfoPage = () => {
                     {gpus && gpus.length > 0 ? gpus.map((gpu, idx) => (
                         <div key={idx} className="border-b border-accent-blue/10 last:border-0 pb-2 mb-2 last:mb-0 last:pb-0">
                             <InfoItem label="Model" value={gpu.name} />
+                            {/* Convert MB to GB */}
                             <InfoItem label="Memory" value={`${(gpu.vram_total_mb / 1024).toFixed(1)} GB`} />
                             <InfoItem label="Driver Temp" value={`${gpu.temperature_c}°C`} />
                         </div>

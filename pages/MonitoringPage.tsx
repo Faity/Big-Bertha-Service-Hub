@@ -52,7 +52,8 @@ const MonitoringPage = () => {
     // 3. Defensive Data Access
     const os = data?.os_status;
     const gpus = data?.gpus || [];
-    const ilo = data?.ilo_metrics;
+    // Updated path for inlet temp based on new API structure
+    const inletTemp = data?.hpe_monitor?.thermal_status?.inlet_ambient_c;
 
     if (!os) return <ErrorDisplay message="Waiting for valid sensor data..." />;
 
@@ -76,19 +77,20 @@ const MonitoringPage = () => {
                 <MetricCard title="Memory Usage" color="text-purple-400">
                     <div className="flex flex-col">
                         <span className="text-3xl font-mono font-bold text-white">
-                            {(os.ram_used_gb ?? 0).toFixed(1)} <span className="text-base text-accent-light">GB</span>
+                            {os.ram_used ?? "N/A"}
                         </span>
-                        <span className="text-xs text-accent-light">of {(os.ram_total_gb ?? 0).toFixed(1)} GB Total</span>
+                        <span className="text-xs text-accent-light">of {os.ram_total ?? "N/A"} Total</span>
                     </div>
-                    <ProgressBar value={os.ram_used_gb} max={os.ram_total_gb} colorClass="bg-purple-500" />
+                    {/* Using percent directly as provided by API */}
+                    <ProgressBar value={os.ram_used_percent ?? 0} max={100} colorClass="bg-purple-500" />
                 </MetricCard>
 
-                {/* Ambient Temp Card (iLO) */}
+                {/* Ambient Temp Card (HPE Monitor) */}
                 <MetricCard title="Inlet Temp" color="text-orange-400">
                      <div className="flex items-center justify-center h-full">
-                        {ilo ? (
+                        {inletTemp !== undefined ? (
                              <div className="text-center">
-                                <span className="text-4xl font-mono font-bold text-white">{ilo.inlet_ambient_c}°C</span>
+                                <span className="text-4xl font-mono font-bold text-white">{inletTemp}°C</span>
                                 <p className="text-xs text-accent-light mt-1">Ambient Sensor</p>
                             </div>
                         ) : (

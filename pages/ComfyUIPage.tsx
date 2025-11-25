@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useSystemData } from '../hooks/useSystemData';
 import { useSettings } from '../contexts/SettingsContext';
@@ -54,6 +53,7 @@ const AccordionItem = ({ title, items }: { title: string, items: string[] | unde
 const ComfyUIPage = () => {
     const { monitorIp, comfyUiPort } = useSettings();
     const { data, loading, error } = useSystemData();
+    // Dynamic URL using context settings
     const comfyUiUrl = `http://${monitorIp}:${comfyUiPort}`;
 
     return (
@@ -62,7 +62,7 @@ const ComfyUIPage = () => {
                 <h2 className="text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-highlight-green to-highlight-cyan">ComfyUI Workbench</h2>
                 <div className="flex items-center space-x-2">
                     <span className="relative flex h-3 w-3">
-                         {/* Simple visual indicator, real check would require separate probe */}
+                         {/* Simple visual indicator */}
                         <span className="relative inline-flex rounded-full h-3 w-3 bg-highlight-green"></span>
                     </span>
                     <a href={comfyUiUrl} target="_blank" rel="noreferrer" className="text-sm text-highlight-green hover:underline">

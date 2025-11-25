@@ -58,14 +58,18 @@ export default defineConfig({
 export interface OsStatus {
     // Dynamic Metrics
     cpu_usage_percent: number;
-    ram_total_gb: number;
-    ram_used_gb: number;
+    ram_total: string; // Now a string, e.g., "128.0 GB"
+    ram_used: string;  // Now a string, e.g., "32.5 GB"
     ram_used_percent: number;
     uptime_seconds: number;
 }
 
-export interface IloMetrics {
+export interface ThermalStatus {
     inlet_ambient_c: number;
+}
+
+export interface HpeMonitor {
+    thermal_status: ThermalStatus;
     power_consumed_watts?: number;
     fan_speed_percent?: number;
 }
@@ -128,7 +132,7 @@ export interface SystemData {
     system_info: SystemInfo;
     os_status: OsStatus;
     gpus: GpuInfo[];
-    ilo_metrics: IloMetrics;
+    hpe_monitor?: HpeMonitor; // New structure
     ollama_status: OllamaStatus;
     comfyui_paths: ComfyUiPaths;
     models_and_assets: ModelsAndAssets;
@@ -592,13 +596,14 @@ interface State {
 }
 
 class ErrorBoundary extends Component<Props, State> {
+  public state: State = {
+    hasError: false,
+    error: null,
+    errorInfo: null,
+  };
+
   constructor(props: Props) {
     super(props);
-    this.state = {
-      hasError: false,
-      error: null,
-      errorInfo: null,
-    };
   }
 
   static getDerivedStateFromError(error: Error): State {
@@ -813,6 +818,7 @@ const SystemInfoPage = () => {
                     {gpus && gpus.length > 0 ? gpus.map((gpu, idx) => (
                         <div key={idx} className="border-b border-accent-blue/10 last:border-0 pb-2 mb-2 last:mb-0 last:pb-0">
                             <InfoItem label="Model" value={gpu.name} />
+                            {/* Convert MB to GB */}
                             <InfoItem label="Memory" value={\`\${(gpu.vram_total_mb / 1024).toFixed(1)} GB\`} />
                             <InfoItem label="Driver Temp" value={\`\${gpu.temperature_c}°C\`} />
                         </div>
@@ -922,6 +928,7 @@ const AccordionItem = ({ title, items }: { title: string, items: string[] | unde
 const ComfyUIPage = () => {
     const { monitorIp, comfyUiPort } = useSettings();
     const { data, loading, error } = useSystemData();
+    // Dynamic URL using context settings
     const comfyUiUrl = \`http://\${monitorIp}:\${comfyUiPort}\`;
 
     return (
@@ -1188,7 +1195,8 @@ const MonitoringPage = () => {
     // 3. Defensive Data Access
     const os = data?.os_status;
     const gpus = data?.gpus || [];
-    const ilo = data?.ilo_metrics;
+    // Updated path for inlet temp based on new API structure
+    const inletTemp = data?.hpe_monitor?.thermal_status?.inlet_ambient_c;
 
     if (!os) return <ErrorDisplay message="Waiting for valid sensor data..." />;
 
@@ -1212,19 +1220,20 @@ const MonitoringPage = () => {
                 <MetricCard title="Memory Usage" color="text-purple-400">
                     <div className="flex flex-col">
                         <span className="text-3xl font-mono font-bold text-white">
-                            {(os.ram_used_gb ?? 0).toFixed(1)} <span className="text-base text-accent-light">GB</span>
+                            {os.ram_used ?? "N/A"}
                         </span>
-                        <span className="text-xs text-accent-light">of {(os.ram_total_gb ?? 0).toFixed(1)} GB Total</span>
+                        <span className="text-xs text-accent-light">of {os.ram_total ?? "N/A"} Total</span>
                     </div>
-                    <ProgressBar value={os.ram_used_gb} max={os.ram_total_gb} colorClass="bg-purple-500" />
+                    {/* Using percent directly as provided by API */}
+                    <ProgressBar value={os.ram_used_percent ?? 0} max={100} colorClass="bg-purple-500" />
                 </MetricCard>
 
-                {/* Ambient Temp Card (iLO) */}
+                {/* Ambient Temp Card (HPE Monitor) */}
                 <MetricCard title="Inlet Temp" color="text-orange-400">
                      <div className="flex items-center justify-center h-full">
-                        {ilo ? (
+                        {inletTemp !== undefined ? (
                              <div className="text-center">
-                                <span className="text-4xl font-mono font-bold text-white">{ilo.inlet_ambient_c}°C</span>
+                                <span className="text-4xl font-mono font-bold text-white">{inletTemp}°C</span>
                                 <p className="text-xs text-accent-light mt-1">Ambient Sensor</p>
                             </div>
                         ) : (
@@ -1273,7 +1282,10 @@ const MonitoringPage = () => {
                             <div className="mb-4">
                                 <div className="flex justify-between text-xs mb-1">
                                     <span className="text-accent-light">VRAM Usage</span>
-                                    <span className="text-highlight-cyan">{((gpu.vram_used_mb ?? 0) / 1024).toFixed(1)} / {((gpu.vram_total_mb ?? 0) / 1024).toFixed(1)} GB</span>
+                                    {/* CONVERTED TO GB */}
+                                    <span className="text-highlight-cyan">
+                                        {((gpu.vram_used_mb ?? 0) / 1024).toFixed(1)} / {((gpu.vram_total_mb ?? 0) / 1024).toFixed(1)} GB
+                                    </span>
                                 </div>
                                 <ProgressBar value={gpu.vram_used_mb} max={gpu.vram_total_mb} colorClass="bg-highlight-cyan" />
                             </div>
