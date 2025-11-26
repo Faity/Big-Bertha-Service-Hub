@@ -136,6 +136,7 @@ const MonitoringPage = () => {
                                 <div className="flex justify-between text-xs mb-1">
                                     <span className="text-accent-light">VRAM Usage</span>
                                     <span className="text-highlight-cyan">
+                                        {/* Hook provides GiB values */}
                                         {(gpu.vram_used_mb ?? 0).toFixed(2)} / {(gpu.vram_total_mb ?? 0).toFixed(2)} GB
                                     </span>
                                 </div>

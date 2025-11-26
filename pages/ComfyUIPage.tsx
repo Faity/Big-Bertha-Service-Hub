@@ -5,7 +5,6 @@ import { useSettings } from '../contexts/SettingsContext';
 const AccordionItem = ({ title, items }: { title: string, items: string[] | undefined }) => {
     const [isOpen, setIsOpen] = useState(false);
     
-    // Defensive check for items
     if (!items || !Array.isArray(items) || items.length === 0) {
         return (
             <div className="border-b border-accent-blue/20">
@@ -61,7 +60,6 @@ const ComfyUIPage = () => {
                 <h2 className="text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-highlight-green to-highlight-cyan">ComfyUI Workbench</h2>
                 <div className="flex items-center space-x-2">
                     <span className="relative flex h-3 w-3">
-                         {/* Simple visual indicator */}
                         <span className="relative inline-flex rounded-full h-3 w-3 bg-highlight-green"></span>
                     </span>
                     <a href={comfyUiUrl} target="_blank" rel="noreferrer" className="text-sm text-highlight-green hover:underline">
@@ -71,7 +69,6 @@ const ComfyUIPage = () => {
             </div>
             
             <div className="flex-grow grid grid-cols-1 lg:grid-cols-4 gap-6 h-[calc(100%-100px)]">
-                {/* Iframe Area */}
                 <div className="lg:col-span-3 bg-black rounded-xl overflow-hidden border-2 border-accent-blue/30 shadow-2xl">
                     <iframe
                         src={comfyUiUrl}
@@ -81,7 +78,6 @@ const ComfyUIPage = () => {
                     />
                 </div>
 
-                {/* Sidebar Assets */}
                 <div className="lg:col-span-1 bg-secondary rounded-xl border border-accent-blue/20 flex flex-col overflow-hidden">
                     <div className="p-4 border-b border-accent-blue/20 bg-primary/30">
                         <h3 className="text-xl font-bold text-highlight-cyan">Asset Library</h3>

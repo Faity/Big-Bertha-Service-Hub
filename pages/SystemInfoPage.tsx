@@ -33,7 +33,7 @@ const SystemInfoPage = () => {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                 <InfoCard title="Host Details">
                     <InfoItem label="Hostname" value={system_info?.hostname} />
-                    <InfoItem label="OS" value={`${system_info?.os_name} ${system_info?.os_version}`} />
+                    <InfoItem label="OS" value={`${system_info?.os_name || 'Linux'} ${system_info?.os_version || ''}`} />
                     <InfoItem label="Kernel" value={system_info?.kernel_version} />
                     <InfoItem label="Architecture" value={system_info?.architecture} />
                     <InfoItem label="Python Env" value={system_info?.python_version} />
@@ -53,6 +53,7 @@ const SystemInfoPage = () => {
                                         <span className="text-xs text-accent-light">ID: {gpu.index}</span>
                                     </div>
                                     <div className="text-xs font-mono text-accent-light">
+                                        {/* Hook provides GiB values */}
                                         VRAM: {(gpu.vram_total_mb ?? 0).toFixed(2)} GB
                                     </div>
                                 </div>
@@ -95,9 +96,9 @@ const SystemInfoPage = () => {
 
                  <div className="md:col-span-2">
                      <InfoCard title="Application Paths">
-                        {comfyui_paths ? Object.entries(comfyui_paths).map(([key, val]) => (
+                        {comfyui_paths && Object.keys(comfyui_paths).length > 0 ? Object.entries(comfyui_paths).map(([key, val]) => (
                              <InfoItem key={key} label={key.toUpperCase().replace('_', ' ')} value={val as string} />
-                        )) : <p>Path configuration unavailable</p>}
+                        )) : <p className="text-accent-light italic">Path configuration unavailable via API</p>}
                      </InfoCard>
                  </div>
             </div>
