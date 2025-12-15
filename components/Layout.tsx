@@ -5,6 +5,8 @@ import { useSettings } from '../contexts/SettingsContext';
 import ServerOffButton from './ServerOffButton';
 import DownloadSourceButton from './DownloadSourceButton';
 
+export const APP_VERSION = "2.1.0";
+
 const CpuChipIcon = () => (
     <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
         <path strokeLinecap="round" strokeLinejoin="round" d="M9 3v2m6-2v2M9 19v2m6-2v2M5 9H3m2 6H3m18-6h-2m2 6h-2M12 6V4m0 16v-2M5 12h2a7 7 0 0110 0h2a9 9 0 00-14 0z" />
@@ -103,6 +105,7 @@ const Layout = () => {
                     <DownloadSourceButton />
                     {/* ServerOffButton intentionally hidden for now to match cleaner refactor */}
                     <div className="text-center pt-4 border-t border-accent-blue/10">
+                      <p className="font-mono text-highlight-cyan mb-1">v{APP_VERSION}</p>
                       <p>HPE ML350 Gen10</p>
                       <p>&copy; 2024 Localhost Services</p>
                     </div>

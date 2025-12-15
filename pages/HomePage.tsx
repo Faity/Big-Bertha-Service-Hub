@@ -60,8 +60,8 @@ const HomePage = () => {
                     </div>
                     <div className="flex-shrink-0 animate-pulse-glow rounded-xl w-[400px] h-[300px]">
                         <img 
-                            src="https://storage.googleapis.com/bot-sandbox-public-images/51a316b2-658f-4f51-872f-524f0c4063bd.png"
-                            alt="Ein HPE-Server in einer futuristischen, Hightech-Stadtlandschaft" 
+                            src="https://images.unsplash.com/photo-1558494949-ef526b0042a0?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80"
+                            alt="Server Rack Dashboard Representation" 
                             className="w-full h-full rounded-xl object-cover shadow-2xl shadow-black/50 border-2 border-highlight-cyan/20"
                         />
                     </div>

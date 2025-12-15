@@ -2,6 +2,15 @@ import React from 'react';
 
 const files = [
     {
+        name: 'metadata.json',
+        content: `{
+  "name": "Local Big Bertha Service Hub v2.1.0",
+  "description": "A dashboard for managing local services like ComfyUI, Ollama, and server monitoring on an HPE ML350 Gen10 server. Provides a modern, centralized interface for accessing and managing powerful AI and system tools.",
+  "version": "2.1.0",
+  "requestFramePermissions": []
+}`
+    },
+    {
         name: 'index.tsx',
         content: `import React from 'react';
 import ReactDOM from 'react-dom/client';
@@ -27,14 +36,6 @@ root.render(
     </ErrorBoundary>
   </React.StrictMode>
 );`
-    },
-    {
-        name: 'metadata.json',
-        content: `{
-  "name": "Local Big Bertha Service Hub Ver2",
-  "description": "A dashboard for managing local services like ComfyUI, Ollama, and server monitoring on an HPE ML350 Gen10 server. Provides a modern, centralized interface for accessing and managing powerful AI and system tools.",
-  "requestFramePermissions": []
-}`
     },
     {
         name: 'index.html',
@@ -84,7 +85,9 @@ root.render(
     "react": "https://aistudiocdn.com/react@^19.1.1",
     "react-dom/": "https://aistudiocdn.com/react-dom@^19.1.1/",
     "react-router-dom": "https://aistudiocdn.com/react-router-dom@^7.8.2",
-    "recharts": "https://aistudiocdn.com/recharts@^3.1.2"
+    "recharts": "https://aistudiocdn.com/recharts@^3.1.2",
+    "vite": "https://aistudiocdn.com/vite@^7.2.4",
+    "@vitejs/plugin-react": "https://aistudiocdn.com/@vitejs/plugin-react@^5.1.1"
   }
 }
 </script>
@@ -132,6 +135,8 @@ import SettingsModal from './SettingsModal';
 import { useSettings } from '../contexts/SettingsContext';
 import ServerOffButton from './ServerOffButton';
 import DownloadSourceButton from './DownloadSourceButton';
+
+export const APP_VERSION = "2.1.0";
 
 const CpuChipIcon = () => (
     <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -189,6 +194,7 @@ const Layout = () => {
     const { isSetup } = useSettings();
     const [isSettingsOpen, setIsSettingsOpen] = useState(false);
     
+    // Automatically open settings if not set up
     useEffect(() => {
         if (!isSetup) {
             setIsSettingsOpen(true);
@@ -228,7 +234,9 @@ const Layout = () => {
                         <span>Settings</span>
                     </button>
                     <DownloadSourceButton />
+                    {/* ServerOffButton intentionally hidden for now to match cleaner refactor */}
                     <div className="text-center pt-4 border-t border-accent-blue/10">
+                      <p className="font-mono text-highlight-cyan mb-1">v{APP_VERSION}</p>
                       <p>HPE ML350 Gen10</p>
                       <p>&copy; 2024 Localhost Services</p>
                     </div>
@@ -308,8 +316,8 @@ const HomePage = () => {
                     </div>
                     <div className="flex-shrink-0 animate-pulse-glow rounded-xl w-[400px] h-[300px]">
                         <img 
-                            src="https://storage.googleapis.com/bot-sandbox-public-images/51a316b2-658f-4f51-872f-524f0c4063bd.png"
-                            alt="Ein HPE-Server in einer futuristischen, Hightech-Stadtlandschaft" 
+                            src="https://images.unsplash.com/photo-1558494949-ef526b0042a0?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80"
+                            alt="Server Rack Dashboard Representation" 
                             className="w-full h-full rounded-xl object-cover shadow-2xl shadow-black/50 border-2 border-highlight-cyan/20"
                         />
                     </div>
@@ -478,6 +486,7 @@ const OllamaPage = () => {
     const { monitorIp, ollamaPort } = useSettings();
     const [message, setMessage] = useState('');
     
+    // Chat UI state (purely frontend for now as per requirements)
     const [chatHistory, setChatHistory] = useState([
         { sender: 'ai', text: 'Ollama subsystem initialized. How can I assist you with the local models?' }
     ]);
@@ -492,6 +501,7 @@ const OllamaPage = () => {
         setMessage('');
         setIsSending(true);
 
+        // Simulation response for UI demo
         setTimeout(() => {
             const aiResponse = { sender: 'ai', text: \`Echo: \${newUserMessage.text} (This is a UI placeholder. Real chat integration requires backend endpoints.)\` };
             setChatHistory(prev => [...prev, aiResponse]);
@@ -499,13 +509,16 @@ const OllamaPage = () => {
         }, 1000);
     };
 
+    // Safe access
     const status = data?.ollama_status;
     const isRunning = status?.status === 'running';
 
     return (
         <div className="animate-fade-in-up grid grid-cols-1 lg:grid-cols-3 gap-8 h-full">
+            {/* Left Column: Status & Models */}
             <div className="lg:col-span-1 flex flex-col gap-6 h-full max-h-[calc(100vh-120px)]">
                 
+                {/* Status Card */}
                 <div className="bg-secondary p-6 rounded-xl border border-accent-blue/20">
                     <h2 className="text-2xl font-bold mb-4 text-highlight-green">Service Status</h2>
                     <div className="flex items-center space-x-3 mb-4">
@@ -523,6 +536,7 @@ const OllamaPage = () => {
                     {error && !data && <p className="text-red-400 text-xs mt-2">{error}</p>}
                 </div>
 
+                {/* Models List */}
                 <div className="bg-secondary p-6 rounded-xl border border-accent-blue/20 flex-grow overflow-hidden flex flex-col">
                     <h3 className="text-xl font-bold mb-4 text-highlight-green">Local Models</h3>
                     
@@ -551,6 +565,7 @@ const OllamaPage = () => {
                 </div>
             </div>
 
+            {/* Right Column: Chat Interface */}
             <div className="lg:col-span-2 bg-secondary rounded-xl border border-accent-blue/20 flex flex-col h-[calc(100vh-120px)]">
                 <div className="p-4 border-b border-accent-blue/20 flex justify-between items-center">
                     <h2 className="text-xl font-bold text-highlight-cyan">Interactive Console</h2>
@@ -744,7 +759,8 @@ const MonitoringPage = () => {
                                 <div className="flex justify-between text-xs mb-1">
                                     <span className="text-accent-light">VRAM Usage</span>
                                     <span className="text-highlight-cyan">
-                                        {((gpu.vram_used_mb ?? 0) / 1024).toFixed(2)} / {((gpu.vram_total_mb ?? 0) / 1024).toFixed(2)} GB
+                                        {/* Hook provides GiB values */}
+                                        {(gpu.vram_used_mb ?? 0).toFixed(2)} / {(gpu.vram_total_mb ?? 0).toFixed(2)} GB
                                     </span>
                                 </div>
                                 <ProgressBar 
@@ -779,6 +795,7 @@ export default MonitoringPage;`
         name: 'types.ts',
         content: `
 export interface SystemInfo {
+    // Static Host Info
     hostname: string;
     os_name: string;
     os_version: string;
@@ -790,6 +807,7 @@ export interface SystemInfo {
 }
 
 export interface OsStatus {
+    // Dynamic Metrics
     cpu_usage_percent: number;
     ram_total_gb: number;
     ram_used_gb: number;
@@ -822,7 +840,7 @@ export interface OllamaModel {
 }
 
 export interface OllamaStatus {
-    status: string; 
+    status: string; // 'running', 'stopped'
     version: string;
     installed_models: OllamaModel[];
 }
@@ -877,7 +895,7 @@ export interface ChartData {
     {
         name: 'hooks/useSystemData.ts',
         content: `import { useState, useEffect } from 'react';
-import { SystemData, IloMetrics } from '../types';
+import { SystemData, IloMetrics, GpuInfo, OllamaStatus, ComfyUiPaths } from '../types';
 import { useSettings } from '../contexts/SettingsContext';
 
 export const useSystemData = () => {
@@ -908,49 +926,95 @@ export const useSystemData = () => {
 
                 const rawData: any = await response.json();
                 
+                // --- Data Interpretation & Parsing ---
+                
+                // 1. Parse HPE Raw Data (Redfish/iLO)
                 let iloMetrics: IloMetrics = {
                     inlet_ambient_c: 0,
                     power_consumed_watts: 0,
                     fan_speed_percent: 0
                 };
 
-                if (rawData.redfish) {
-                    if (rawData.redfish.Thermal) {
-                        const thermal = rawData.redfish.Thermal;
-                        
-                        if (Array.isArray(thermal.Temperatures)) {
-                            const ambientSensor = thermal.Temperatures.find((t: any) => 
-                                t.Name && t.Name.toLowerCase().includes('ambient')
-                            );
-                            if (ambientSensor && typeof ambientSensor.ReadingCelsius === 'number') {
-                                iloMetrics.inlet_ambient_c = ambientSensor.ReadingCelsius;
-                            } else if (thermal.Temperatures.length > 0) {
-                                iloMetrics.inlet_ambient_c = thermal.Temperatures[0].ReadingCelsius ?? 0;
+                const hpe = rawData.hpe_raw_data;
+                if (hpe) {
+                    // Thermal Data
+                    if (hpe.raw_thermal_data) {
+                        const temps = hpe.raw_thermal_data.Temperatures;
+                        const fans = hpe.raw_thermal_data.Fans;
+
+                        // Temperature: Find "01-Inlet Ambient"
+                        if (Array.isArray(temps)) {
+                            const ambient = temps.find((t: any) => t.Name === "01-Inlet Ambient");
+                            if (ambient && typeof ambient.ReadingCelsius === 'number') {
+                                iloMetrics.inlet_ambient_c = ambient.ReadingCelsius;
                             }
                         }
 
-                        if (Array.isArray(thermal.Fans)) {
-                            const readings = thermal.Fans
-                                .map((f: any) => f.Reading)
-                                .filter((r: any) => typeof r === 'number');
-                            
-                            if (readings.length > 0) {
-                                const totalSpeed = readings.reduce((acc: number, curr: number) => acc + curr, 0);
-                                iloMetrics.fan_speed_percent = Math.round(totalSpeed / readings.length);
+                        // Fans: Extract "Reading" (Percent)
+                        if (Array.isArray(fans)) {
+                            const validFans = fans.filter((f: any) => typeof f.Reading === 'number');
+                            if (validFans.length > 0) {
+                                const sum = validFans.reduce((acc: number, curr: any) => acc + curr.Reading, 0);
+                                iloMetrics.fan_speed_percent = Math.round(sum / validFans.length);
                             }
                         }
                     }
 
-                    if (rawData.redfish.Power && Array.isArray(rawData.redfish.Power.PowerControl)) {
-                        const powerControl = rawData.redfish.Power.PowerControl[0];
-                        if (powerControl && typeof powerControl.PowerConsumedWatts === 'number') {
-                            iloMetrics.power_consumed_watts = powerControl.PowerConsumedWatts;
+                    // Power Data
+                    if (hpe.raw_power_data && Array.isArray(hpe.raw_power_data.PowerControl)) {
+                        const pc = hpe.raw_power_data.PowerControl[0];
+                        if (pc && typeof pc.PowerConsumedWatts === 'number') {
+                            iloMetrics.power_consumed_watts = pc.PowerConsumedWatts;
                         }
                     }
-                } else if (rawData.ilo_metrics) {
-                    iloMetrics = rawData.ilo_metrics;
                 }
 
+                // 2. Normalize GPU Data (Bytes -> GiB)
+                // The API snapshot sends Bytes in fields named "_mb" (e.g., 6442450944).
+                // We convert these to GiB for the frontend.
+                const processedGpus: GpuInfo[] = (rawData.gpus || []).map((gpu: any) => {
+                    const bytesInGiB = Math.pow(1024, 3);
+                    
+                    let totalGiB = 0;
+                    let usedGiB = 0;
+
+                    // Handle Total
+                    // If the value is very large (> 1,000,000), it's bytes. Otherwise assume MB.
+                    if (typeof gpu.vram_total_mb === 'number') {
+                        if (gpu.vram_total_mb > 1000000) {
+                             totalGiB = gpu.vram_total_mb / bytesInGiB;
+                        } else {
+                             totalGiB = gpu.vram_total_mb / 1024;
+                        }
+                    }
+
+                    // Handle Used
+                    if (typeof gpu.vram_used_mb === 'number') {
+                        if (gpu.vram_used_mb > 1000000) {
+                            usedGiB = gpu.vram_used_mb / bytesInGiB;
+                        } else {
+                            usedGiB = gpu.vram_used_mb / 1024;
+                        }
+                    }
+
+                    return {
+                        ...gpu,
+                        vram_total_mb: totalGiB, // Storing GiB in this field for frontend consistency
+                        vram_used_mb: usedGiB,
+                    };
+                });
+
+                // 3. Service Status & Defaults
+                // Map snapshot's service_status to ollama_status
+                const ollamaStatus: OllamaStatus = {
+                    status: rawData.service_status?.ollama?.status || 'unknown',
+                    version: 'N/A',
+                    installed_models: [] 
+                };
+
+                const comfyUiPaths: ComfyUiPaths | any = {}; 
+
+                // 4. OS Status
                 const osStatus = rawData.os_status || {
                     cpu_usage_percent: 0,
                     ram_total_gb: 0,
@@ -959,17 +1023,21 @@ export const useSystemData = () => {
                     uptime_seconds: 0
                 };
 
-                if (typeof osStatus.ram_total_gb === 'string') {
-                    osStatus.ram_total_gb = parseFloat(osStatus.ram_total_gb);
-                }
+                // Ensure numeric types
+                if (typeof osStatus.ram_total_gb === 'string') osStatus.ram_total_gb = parseFloat(osStatus.ram_total_gb);
+                if (typeof osStatus.ram_used_gb === 'string') osStatus.ram_used_gb = parseFloat(osStatus.ram_used_gb);
 
                 const processedData: SystemData = {
                     ...rawData,
                     os_status: osStatus,
                     ilo_metrics: iloMetrics,
-                    gpus: rawData.gpus || [],
-                    storage_status: rawData.storage_status || [],
+                    gpus: processedGpus,
+                    ollama_status: ollamaStatus, 
+                    comfyui_paths: comfyUiPaths,
+                    models_and_assets: rawData.models_and_assets || { checkpoints: [], loras: [], custom_nodes: [], vae: [], controlnet: [] },
                     workflows: rawData.workflows || [],
+                    storage_status: rawData.storage_status || [],
+                    system_info: rawData.system_info || { hostname: rawData.server_name || "Unknown" }
                 };
                 
                 if (isMounted) {
@@ -989,7 +1057,6 @@ export const useSystemData = () => {
         };
 
         fetchData();
-
         const intervalId = setInterval(fetchData, 3000);
 
         return () => {
@@ -1038,7 +1105,7 @@ const SystemInfoPage = () => {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                 <InfoCard title="Host Details">
                     <InfoItem label="Hostname" value={system_info?.hostname} />
-                    <InfoItem label="OS" value={\`\${system_info?.os_name} \${system_info?.os_version}\`} />
+                    <InfoItem label="OS" value={\`\${system_info?.os_name || 'Linux'} \${system_info?.os_version || ''}\`} />
                     <InfoItem label="Kernel" value={system_info?.kernel_version} />
                     <InfoItem label="Architecture" value={system_info?.architecture} />
                     <InfoItem label="Python Env" value={system_info?.python_version} />
@@ -1058,7 +1125,8 @@ const SystemInfoPage = () => {
                                         <span className="text-xs text-accent-light">ID: {gpu.index}</span>
                                     </div>
                                     <div className="text-xs font-mono text-accent-light">
-                                        VRAM: {((gpu.vram_total_mb ?? 0) / 1024).toFixed(2)} GB
+                                        {/* Hook provides GiB values */}
+                                        VRAM: {(gpu.vram_total_mb ?? 0).toFixed(2)} GB
                                     </div>
                                 </div>
                             ))}
@@ -1100,9 +1168,9 @@ const SystemInfoPage = () => {
 
                  <div className="md:col-span-2">
                      <InfoCard title="Application Paths">
-                        {comfyui_paths ? Object.entries(comfyui_paths).map(([key, val]) => (
+                        {comfyui_paths && Object.keys(comfyui_paths).length > 0 ? Object.entries(comfyui_paths).map(([key, val]) => (
                              <InfoItem key={key} label={key.toUpperCase().replace('_', ' ')} value={val as string} />
-                        )) : <p>Path configuration unavailable</p>}
+                        )) : <p className="text-accent-light italic">Path configuration unavailable via API</p>}
                      </InfoCard>
                  </div>
             </div>
@@ -1336,502 +1404,6 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose }) => {
 export default SettingsModal;`
     },
     {
-        name: 'components/ErrorBoundary.tsx',
-        content: `import React, { ErrorInfo, ReactNode } from 'react';
-
-interface Props {
-  children?: ReactNode;
-}
-
-interface State {
-  hasError: boolean;
-  error: Error | null;
-  errorInfo: ErrorInfo | null;
-}
-
-class ErrorBoundary extends React.Component<Props, State> {
-  public state: State = {
-    hasError: false,
-    error: null,
-    errorInfo: null,
-  };
-
-  public static getDerivedStateFromError(error: Error): State {
-    return { hasError: true, error, errorInfo: null };
-  }
-
-  public componentDidCatch(error: Error, errorInfo: ErrorInfo) {
-    console.error("Uncaught error:", error, errorInfo);
-    this.setState({ error, errorInfo });
-  }
-
-  public render() {
-    if (this.state.hasError) {
-      return (
-        <div className="min-h-screen bg-[#0D1B2A] text-[#E0E1DD] flex items-center justify-center p-8 font-mono">
-          <div className="max-w-3xl w-full bg-[#1B263B] border-2 border-red-500/50 rounded-xl p-8 shadow-2xl shadow-red-900/20">
-            <div className="flex items-center gap-4 mb-6 border-b border-red-500/30 pb-4">
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-10 w-10 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-              </svg>
-              <h1 className="text-3xl font-bold text-red-400">System Critical Error</h1>
-            </div>
-            
-            <p className="text-xl mb-4">The application encountered an unexpected error and had to stop.</p>
-            
-            <div className="bg-[#0D1B2A] p-4 rounded-lg border border-red-500/20 overflow-auto max-h-64 mb-6">
-              <p className="text-red-300 font-bold mb-2">{this.state.error?.toString()}</p>
-              <pre className="text-xs text-[#778DA9] whitespace-pre-wrap">
-                {this.state.errorInfo?.componentStack}
-              </pre>
-            </div>
-
-            <div className="flex justify-end gap-4">
-               <button
-                onClick={() => window.location.reload()}
-                className="bg-red-600 hover:bg-red-500 text-white font-bold py-3 px-6 rounded-lg transition-colors duration-200 flex items-center gap-2"
-              >
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.058T4.058 9H3v1h11v-1H3V4h1zm.058 5H21v5h-1v-4H5.058zM4 14v5h16v-1H4v-4z" /> 
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83" />
-                </svg>
-                System Reboot (Reload)
-              </button>
-            </div>
-          </div>
-        </div>
-      );
-    }
-
-    return this.props.children;
-  }
-}
-
-export default ErrorBoundary;`
-    },
-    {
-        name: 'contexts/SimulationContext.tsx',
-        content: `import React, { createContext, useContext, useState, useEffect, ReactNode, useCallback } from 'react';
-import { SystemData, GpuInfo, StorageStatus, ChartData } from '../types';
-
-const deepCopy = <T,>(obj: T): T => {
-  return JSON.parse(JSON.stringify(obj));
-};
-
-const generateInitialData = (length: number, range: number): ChartData[] => {
-    return Array.from({ length }, (_, i) => ({
-        name: \`\${length - 1 - i}s ago\`,
-        value: Math.floor(Math.random() * range),
-    }));
-};
-
-const updateChartData = (prevData: ChartData[], range: number) => {
-    const newData = [...prevData.slice(1)];
-    const newValue = Math.floor(Math.random() * range);
-    newData.push({ name: 'now', value: newValue });
-    return newData.map((d, i) => ({ ...d, name: \`\${newData.length - 1 - i}s ago\` }));
-};
-
-
-interface AppDataContextType {
-    baseData: SystemData | null;
-    displayData: SystemData | null;
-    loading: boolean;
-    error: string | null;
-    isSimulating: boolean;
-    toggleSimulation: () => void;
-    cpuHistory: ChartData[];
-    ramHistory: ChartData[];
-    netHistory: ChartData[];
-    diskHistory: ChartData[];
-}
-
-const SimulationContext = createContext<AppDataContextType | undefined>(undefined);
-
-const HISTORY_LENGTH = 15;
-
-export const SimulationProvider = ({ children }: { children: ReactNode }) => {
-    const [baseData, setBaseData] = useState<SystemData | null>(null);
-    const [displayData, setDisplayData] = useState<SystemData | null>(null);
-    const [loading, setLoading] = useState<boolean>(true);
-    const [error, setError] = useState<string | null>(null);
-    const [isSimulating, setIsSimulating] = useState<boolean>(false);
-    
-    const [cpuHistory, setCpuHistory] = useState<ChartData[]>(generateInitialData(HISTORY_LENGTH, 100));
-    const [ramHistory, setRamHistory] = useState<ChartData[]>([]);
-    const [netHistory, setNetHistory] = useState<ChartData[]>(generateInitialData(HISTORY_LENGTH, 1000));
-    const [diskHistory, setDiskHistory] = useState<ChartData[]>(generateInitialData(HISTORY_LENGTH, 500));
-
-
-    useEffect(() => {
-        const fetchData = async () => {
-            try {
-                const response = await fetch('/application.json');
-                if (!response.ok) {
-                    throw new Error(\`HTTP error! status: \${response.status}\`);
-                }
-                const jsonData: SystemData = await response.json();
-                setBaseData(jsonData);
-                setDisplayData(jsonData);
-                const totalRam = jsonData.os_status?.ram_total_gb || 100;
-                setRamHistory(generateInitialData(HISTORY_LENGTH, Math.round(totalRam)));
-            } catch (e: any) {
-                setError(e.message);
-            } finally {
-                setLoading(false);
-            }
-        };
-        fetchData();
-    }, []);
-
-    const runSimulation = useCallback(() => {
-        if (!baseData) return;
-
-        const simulatedData = deepCopy(baseData);
-
-        if (simulatedData.gpus) {
-            simulatedData.gpus = simulatedData.gpus.map((gpu: GpuInfo) => {
-                const usageChange = (Math.random() - 0.45) * (gpu.vram_total_mb * 0.05); 
-                const newUsed = Math.max(3, Math.min(gpu.vram_total_mb * 0.95, gpu.vram_used_mb + usageChange));
-                return {
-                    ...gpu,
-                    vram_used_mb: newUsed,
-                    vram_free_mb: gpu.vram_total_mb - newUsed,
-                };
-            });
-        }
-
-        if (simulatedData.storage_status) {
-            simulatedData.storage_status = simulatedData.storage_status.map((disk: StorageStatus) => {
-                 const usageChange = (Math.random() - 0.4) * 0.01;
-                 const newUsed = Math.max(0, Math.min(disk.total_gb * 0.98, disk.used_gb + usageChange));
-                 return {
-                     ...disk,
-                     used_gb: newUsed,
-                     free_gb: disk.total_gb - newUsed,
-                 };
-            });
-        }
-        
-        setDisplayData(simulatedData);
-
-        setCpuHistory(prev => updateChartData(prev, 100));
-        setNetHistory(prev => updateChartData(prev, 1000));
-        setDiskHistory(prev => updateChartData(prev, 500));
-        
-        const totalRam = baseData.os_status?.ram_total_gb || 100;
-        setRamHistory(prev => updateChartData(prev, Math.round(totalRam)));
-
-    }, [baseData]);
-
-
-    useEffect(() => {
-        let intervalId: number | null = null;
-        if (isSimulating && !loading) {
-            intervalId = window.setInterval(runSimulation, 2000);
-        } else {
-            setDisplayData(baseData);
-            if(baseData) {
-                 setCpuHistory(generateInitialData(HISTORY_LENGTH, 100));
-                 const totalRam = baseData.os_status?.ram_total_gb || 100;
-                 setRamHistory(generateInitialData(HISTORY_LENGTH, Math.round(totalRam)));
-                 setNetHistory(generateInitialData(HISTORY_LENGTH, 1000));
-                 setDiskHistory(generateInitialData(HISTORY_LENGTH, 500));
-            }
-        }
-        return () => {
-            if (intervalId) clearInterval(intervalId);
-        };
-    }, [isSimulating, baseData, loading, runSimulation]);
-
-    const toggleSimulation = () => {
-        setIsSimulating(prev => !prev);
-    };
-
-    return (
-        <SimulationContext.Provider value={{ baseData, displayData, loading, error, isSimulating, toggleSimulation, cpuHistory, ramHistory, netHistory, diskHistory }}>
-            {children}
-        </SimulationContext.Provider>
-    );
-};
-
-export const useAppData = (): AppDataContextType => {
-    const context = useContext(SimulationContext);
-    if (context === undefined) {
-        throw new Error('useAppData must be used within a SimulationProvider');
-    }
-    return context;
-};`
-    },
-    {
-        name: 'components/SimulationToggle.tsx',
-        content: `import React from 'react';
-import { useAppData } from '../contexts/SimulationContext';
-
-const SimulationToggle = () => {
-    const { isSimulating, toggleSimulation } = useAppData();
-
-    return (
-        <div className="flex flex-col items-center gap-2 p-3 bg-primary rounded-lg border border-accent-blue/20">
-            <div className="flex items-center justify-between w-full">
-                <label htmlFor="simulation-toggle" className="text-sm font-medium text-text-main cursor-pointer">
-                    Server Simulation
-                </label>
-                <div 
-                    className={\`relative inline-flex items-center h-6 rounded-full w-11 cursor-pointer transition-colors duration-300 \${isSimulating ? 'bg-highlight-cyan' : 'bg-accent-blue'}\`}
-                    onClick={toggleSimulation}
-                    role="switch"
-                    aria-checked={isSimulating}
-                    tabIndex={0}
-                    onKeyDown={(e) => e.key === 'Enter' || e.key === ' ' ? toggleSimulation() : null}
-                >
-                    <span
-                        className={\`inline-block w-4 h-4 transform bg-white rounded-full transition-transform duration-300 \${isSimulating ? 'translate-x-6' : 'translate-x-1'}\`}
-                    />
-                </div>
-            </div>
-            <p className="text-xs text-accent-light text-center">
-                {isSimulating ? 'Displaying dynamic, simulated data.' : 'Displaying static data from last report.'}
-            </p>
-        </div>
-    );
-};
-
-export default SimulationToggle;`
-    },
-    {
-        name: 'application.json',
-        content: `{
-    "system_info": {
-        "os_name": "Linux",
-        "os_version": "Ubuntu 24.04.2 LTS",
-        "kernel_version": "6.11.0-29-generic",
-        "architecture": "x86_64",
-        "python_version": "3.12.3 (main, Jun 18 2025, 17:59:45) [GCC 13.3.0]",
-        "total_ram_gb": 251.36,
-        "cpu_info": "Intel(R) Xeon(R) Silver 4210R CPU @ 2.40GHz (x20)",
-        "comfyui_git_version": "e18f53cc (Git HEAD)"
-    },
-    "gpu_status": [
-        {
-            "name": "NVIDIA GeForce RTX 3050",
-            "vram_total_mb": 6144,
-            "vram_used_mb": 3,
-            "vram_free_mb": 6141,
-            "note": "Basic CSV query used for compatibility."
-        },
-        {
-            "name": "NVIDIA RTX 4000 Ada Generation",
-            "vram_total_mb": 20475,
-            "vram_used_mb": 3,
-            "vram_free_mb": 20472,
-            "note": "Basic CSV query used for compatibility."
-        }
-    ],
-    "ollama_status": {
-        "status": "running",
-        "service_status": "active",
-        "version": "ollama version is 0.8.0",
-        "installed_models": [
-            {
-                "name": "comfyadmin_master:latest",
-                "size": "727b32c80915",
-                "digest": "4.9",
-                "updated": "GB 18 hours ago"
-            },
-            {
-                "name": "llama3.1:8b",
-                "size": "46e0c10c039e",
-                "digest": "4.9",
-                "updated": "GB 18 hours ago"
-            },
-            {
-                "name": "deepseek-r1:latest",
-                "size": "6995872bfe4c",
-                "digest": "5.2",
-                "updated": "GB 19 hours ago"
-            },
-            {
-                "name": "comfyadmin:latest",
-                "size": "cf34f06eccdc",
-                "digest": "4.1",
-                "updated": "GB 4 weeks ago"
-            },
-            {
-                "name": "comfy-admin:latest",
-                "size": "5eb3ea4ba3f5",
-                "digest": "4.1",
-                "updated": "GB 7 weeks ago"
-            },
-            {
-                "name": "mistral:latest",
-                "size": "f974a74358d6",
-                "digest": "4.1",
-                "updated": "GB 7 weeks ago"
-            }
-        ]
-    },
-    "comfyui_paths": {
-        "base_path": "/opt/ki_project/ComfyUI",
-        "custom_nodes": "/opt/ki_project/ComfyUI/custom_nodes",
-        "checkpoints": "/opt/ki_project/ComfyUI/models/checkpoints",
-        "loras": "/opt/ki_project/ComfyUI/models/loras",
-        "vae": "/opt/ki_project/ComfyUI/models/vae",
-        "embeddings": "/opt/ki_project/ComfyUI/models/embeddings",
-        "controlnet": "/opt/ki_project/ComfyUI/models/controlnet",
-        "clip_vision": "/opt/ki_project/ComfyUI/models/clip_vision",
-        "unclip": "Path not found: /opt/ki_project/ComfyUI/models/unclip",
-        "upscale_models": "/opt/ki_project/ComfyUI/models/upscale_models",
-        "diffusers": "/opt/ki_project/ComfyUI/models/diffusers",
-        "gligen": "/opt/ki_project/ComfyUI/models/gligen",
-        "t2i_adapter": "Path not found: /opt/ki_project/ComfyUI/models/t2i_adapter",
-        "video_models": "Path not found: /opt/ki_project/ComfyUI/models/video_models",
-        "workflows": "/opt/ki_project/ComfyUI/Workflow Store"
-    },
-    "models_and_assets": {
-        "custom_nodes": [
-            "ComfyUI-Copilot",
-            "ComfyUI-Crystools",
-            "ComfyUI-Impact-Pack",
-            "ComfyUI-Iterative-Mixer",
-            "ComfyUI-Manager",
-            "ComfyUI-RMBG",
-            "ComfyUI_IPAdapter_plus",
-            "ComfyUI_bfl_api_pro_nodes",
-            "ComfyUI_nodes",
-            "Comfyui-Yolov8",
-            "batchimg-rembg-comfyui-nodes",
-            "comfy-mtb",
-            "comfy_bfl_nodes",
-            "comfyui-advanced-controlnet",
-            "comfyui-cyclist",
-            "comfyui-flux-bfl-api",
-            "comfyui-if_gemini",
-            "comfyui-impact-subpack",
-            "comfyui-inpaint-cropandstitch",
-            "comfyui-inpainteasy",
-            "comfyui-inspire-pack",
-            "comfyui-inspyrenet-rembg",
-            "comfyui-job-iterator",
-            "comfyui-kjnodes",
-            "comfyui-logicutils",
-            "comfyui-multigpu",
-            "comfyui-my-nodes",
-            "comfyui-ollama",
-            "comfyui-ultralytics-yolo",
-            "comfyui-utils-nodes",
-            "comfyui-various",
-            "comfyui_birefnet_ll",
-            "comfyui_controlnet_aux",
-            "comfyui_creepy_nodes",
-            "comfyui_essentials",
-            "comfyui_layerstyle",
-            "comfyui_segment_anything_plus",
-            "comfyui_soze",
-            "example_node.py.example",
-            "facerestore_cf",
-            "krita-ai-diffusion",
-            "portraittools-mw",
-            "rembg-comfyui-node",
-            "rgthree-comfy",
-            "was-node-suite-comfyui",
-            "was-ns",
-            "websocket_image_save.py"
-        ],
-        "checkpoints": [
-            "SDXL-TURBO",
-            "juggernautXL_v8Rundiffusion.safetensors",
-            "put_checkpoints_here",
-            "v1-5-pruned-emaonly-fp16.safetensors",
-            "v1-5-pruned-emaonly.safetensors"
-        ],
-        "loras": [
-            "Funko_Pop_Flux.safetensors",
-            "Funko_Pop_SDXL.safetensors",
-            "put_loras_here"
-        ],
-        "vae": [
-            "ae.safetensors",
-            "ae.sft",
-            "put_vae_here"
-        ],
-        "embeddings": [
-            "put_embeddings_or_textual_inversion_concepts_here"
-        ],
-        "controlnet": [
-            "diffusion_pytorch_model_promax.safetensors",
-            "put_controlnets_and_t2i_here"
-        ],
-        "clip_vision": [
-            "put_clip_vision_models_here"
-        ],
-        "upscale_models": [
-            "4x-UltraSharp.pth",
-            "8x_NMKD-Faces_160000_G.pth",
-            "ldsr",
-            "put_esrgan_and_other_upscale_models_here"
-        ],
-        "diffusers": [
-            "put_diffusers_models_here"
-        ],
-        "gligen": [
-            "put_gligen_models_here"
-        ]
-    },
-    "workflows": [
-        "01-faceswap.json",
-        "Base SD Workflow.json",
-        "FLUX.1 DEV 1.0【Zho】.json",
-        "FLUX.1_DEV_1.0_Zho.json",
-        "Miramonte_Gesicht_Isolieren.json",
-        "Miramonte_Gesichter_Isolieren v1.json",
-        "Miramonte_Person_Isolieren.json",
-        "Miramonte_Testflow.json",
-        "____inpaint_flux_1_fill_comfyworkflows.json",
-        "api_google_gemini.json",
-        "bastian4523_simple_workflow_for_beginners_with_lora___img2img_comfyworkflows.json"
-    ],
-    "storage_status": [
-        {
-            "path": "/opt/ki_project",
-            "total_gb": 549.07,
-            "used_gb": 13.03,
-            "free_gb": 508.08,
-            "filesystem_type": "ext4",
-            "device": "/dev/sda1",
-            "uuid": null,
-            "mount_options": "rw,relatime,stripe=256",
-            "error": null,
-            "description": "AI Project Base (Local SSD)"
-        },
-        {
-            "path": "/mnt/comfyui_iscsi_data",
-            "total_gb": 782.43,
-            "used_gb": 152.31,
-            "free_gb": 590.31,
-            "filesystem_type": "ext4",
-            "device": "/dev/sdd1",
-            "uuid": null,
-            "mount_options": "rw,relatime,stripe=320",
-            "error": null,
-            "description": "ComfyUI Models & LoRAs (iSCSI NAS)"
-        },
-        {
-            "path": "/mnt/ki_io_data",
-            "total_gb": 3022.69,
-            "used_gb": 0.18,
-            "free_gb": 2868.89,
-            "filesystem_type": "ext4",
-            "device": "/dev/sde1",
-            "uuid": null,
-            "mount_options": "rw,relatime,stripe=320",
-            "error": null,
-            "description": "AI Generated Results (iSCSI NAS)"
-        }
-    ]
-}`
-    },
-    {
         name: 'components/ServerOffButton.tsx',
         content: `import React, { useState } from 'react';
 
@@ -1945,7 +1517,7 @@ const DownloadSourceButton = () => {
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
-        a.download = 'LocalBigBertha_Source.txt';
+        a.download = 'LocalBigBertha_Source_v2.1.0.txt';
         document.body.appendChild(a);
         a.click();
         document.body.removeChild(a);
