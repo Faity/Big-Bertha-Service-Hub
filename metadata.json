@@ -1,6 +1,6 @@
 {
   "name": "Big Bertha Command Center v3.0",
   "description": "Next-Gen Server Management Dashboard for HPE ML350 Gen10. Features real-time Redfish monitoring, AI service status, and GPU telemetry.",
-  "version": "3.0.0",
+  "version": "3.0.1",
   "requestFramePermissions": []
 }
