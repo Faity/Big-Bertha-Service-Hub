@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { useSystemData } from '../hooks/useSystemData';
 import { useSettings } from '../contexts/SettingsContext';
@@ -10,7 +11,7 @@ const SendIcon = () => (
 
 const OllamaPage = () => {
     const { data, loading, error } = useSystemData();
-    const { monitorIp, ollamaPort } = useSettings();
+    const { config } = useSettings();
     const [message, setMessage] = useState('');
     
     // Chat UI state (purely frontend for now as per requirements)
@@ -57,7 +58,7 @@ const OllamaPage = () => {
                     {status && (
                         <div className="text-xs font-mono text-accent-light space-y-1">
                             <p>Version: {status.version}</p>
-                            <p>Target: http://{monitorIp}:{ollamaPort}</p>
+                            <p>Target: {config.ollama_url}</p>
                         </div>
                     )}
                     {error && !data && <p className="text-red-400 text-xs mt-2">{error}</p>}

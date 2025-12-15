@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { useSystemData } from '../hooks/useSystemData';
 
@@ -54,7 +55,7 @@ const SystemInfoPage = () => {
                                     </div>
                                     <div className="text-xs font-mono text-accent-light">
                                         {/* Hook provides GiB values */}
-                                        VRAM: {(gpu.vram_total_mb ?? 0).toFixed(2)} GB
+                                        VRAM: {(gpu.vram_total ?? 0).toFixed(2)} GB
                                     </div>
                                 </div>
                             ))}

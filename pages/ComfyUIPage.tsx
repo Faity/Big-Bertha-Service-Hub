@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { useSystemData } from '../hooks/useSystemData';
 import { useSettings } from '../contexts/SettingsContext';
@@ -50,9 +51,8 @@ const AccordionItem = ({ title, items }: { title: string, items: string[] | unde
 };
 
 const ComfyUIPage = () => {
-    const { monitorIp, comfyUiPort } = useSettings();
+    const { config } = useSettings();
     const { data, loading, error } = useSystemData();
-    const comfyUiUrl = `http://${monitorIp}:${comfyUiPort}`;
 
     return (
         <div className="flex flex-col h-full animate-fade-in-up space-y-6">
@@ -62,7 +62,7 @@ const ComfyUIPage = () => {
                     <span className="relative flex h-3 w-3">
                         <span className="relative inline-flex rounded-full h-3 w-3 bg-highlight-green"></span>
                     </span>
-                    <a href={comfyUiUrl} target="_blank" rel="noreferrer" className="text-sm text-highlight-green hover:underline">
+                    <a href={config.comfy_url} target="_blank" rel="noreferrer" className="text-sm text-highlight-green hover:underline">
                         Open in New Tab
                     </a>
                 </div>
@@ -71,7 +71,7 @@ const ComfyUIPage = () => {
             <div className="flex-grow grid grid-cols-1 lg:grid-cols-4 gap-6 h-[calc(100%-100px)]">
                 <div className="lg:col-span-3 bg-black rounded-xl overflow-hidden border-2 border-accent-blue/30 shadow-2xl">
                     <iframe
-                        src={comfyUiUrl}
+                        src={config.comfy_url}
                         title="ComfyUI"
                         className="w-full h-full border-0"
                         allow="clipboard-read; clipboard-write"

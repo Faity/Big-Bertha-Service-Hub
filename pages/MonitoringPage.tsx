@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { useSystemData } from '../hooks/useSystemData';
 
@@ -45,7 +46,13 @@ const MonitoringPage = () => {
     if (loading && !data) return <LoadingSpinner />;
     if (error && !data) return <ErrorDisplay message={error} />;
 
-    const os = data?.os_status;
+    const sys = data?.system; 
+    const os = data?.os_status || (sys ? {
+        cpu_usage_percent: sys.cpu_usage,
+        ram_used_gb: sys.ram_used,
+        ram_total_gb: sys.ram_total
+    } : null);
+
     const gpus = data?.gpus || [];
     const ilo = data?.ilo_metrics;
 
@@ -103,7 +110,7 @@ const MonitoringPage = () => {
                         {gpus.length > 0 ? (
                              <div className="text-center">
                                 <span className="text-4xl font-mono font-bold text-white">
-                                    {Math.max(...gpus.map(g => g.temperature_c ?? 0))}°C
+                                    {Math.max(...gpus.map(g => g.temp ?? 0))}°C
                                 </span>
                                 <p className="text-xs text-accent-light mt-1">Hotspot</p>
                             </div>
@@ -125,8 +132,8 @@ const MonitoringPage = () => {
                                     <span className="text-xs font-mono text-accent-light">ID: {gpu.index}</span>
                                 </div>
                                 <div className="text-right">
-                                    <span className={`text-xl font-bold ${(gpu.temperature_c ?? 0) > 80 ? 'text-red-400' : 'text-green-400'}`}>
-                                        {gpu.temperature_c ?? 'N/A'}°C
+                                    <span className={`text-xl font-bold ${(gpu.temp ?? 0) > 80 ? 'text-red-400' : 'text-green-400'}`}>
+                                        {gpu.temp ?? 'N/A'}°C
                                     </span>
                                     <p className="text-xs text-accent-light">Core Temp</p>
                                 </div>
@@ -137,12 +144,12 @@ const MonitoringPage = () => {
                                     <span className="text-accent-light">VRAM Usage</span>
                                     <span className="text-highlight-cyan">
                                         {/* Hook provides GiB values */}
-                                        {(gpu.vram_used_mb ?? 0).toFixed(2)} / {(gpu.vram_total_mb ?? 0).toFixed(2)} GB
+                                        {(gpu.vram_used ?? 0).toFixed(2)} / {(gpu.vram_total ?? 0).toFixed(2)} GB
                                     </span>
                                 </div>
                                 <ProgressBar 
-                                    value={gpu.vram_used_mb ?? 0} 
-                                    max={gpu.vram_total_mb ?? 1} 
+                                    value={gpu.vram_used ?? 0} 
+                                    max={gpu.vram_total ?? 1} 
                                     colorClass="bg-highlight-cyan" 
                                 />
                             </div>
@@ -150,9 +157,9 @@ const MonitoringPage = () => {
                              <div>
                                 <div className="flex justify-between text-xs mb-1">
                                     <span className="text-accent-light">Core Utilization</span>
-                                    <span className="text-highlight-green">{gpu.gpu_utilization_percent ?? 0}%</span>
+                                    <span className="text-highlight-green">{gpu.utilization ?? 0}%</span>
                                 </div>
-                                <ProgressBar value={gpu.gpu_utilization_percent} max={100} colorClass="bg-highlight-green" />
+                                <ProgressBar value={gpu.utilization} max={100} colorClass="bg-highlight-green" />
                             </div>
                         </div>
                     ))}

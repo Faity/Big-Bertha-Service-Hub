@@ -85,12 +85,11 @@ export const SimulationProvider = ({ children }: { children: ReactNode }) => {
         // Simulate GPU VRAM usage
         if (simulatedData.gpus) {
             simulatedData.gpus = simulatedData.gpus.map((gpu: GpuInfo) => {
-                const usageChange = (Math.random() - 0.45) * (gpu.vram_total_mb * 0.05); // Fluctuate by up to 5%, tend to increase slightly
-                const newUsed = Math.max(3, Math.min(gpu.vram_total_mb * 0.95, gpu.vram_used_mb + usageChange));
+                const usageChange = (Math.random() - 0.45) * (gpu.vram_total * 0.05); // Fluctuate by up to 5%, tend to increase slightly
+                const newUsed = Math.max(3, Math.min(gpu.vram_total * 0.95, gpu.vram_used + usageChange));
                 return {
                     ...gpu,
-                    vram_used_mb: newUsed,
-                    vram_free_mb: gpu.vram_total_mb - newUsed,
+                    vram_used: newUsed,
                 };
             });
         }

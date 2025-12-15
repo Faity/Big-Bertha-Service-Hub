@@ -1,55 +1,95 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import { AppConfig } from '../types';
 
 interface SettingsContextType {
-  iloUrl: string;
-  setIloUrl: (url: string) => void;
-  iloUser: string;
-  setIloUser: (user: string) => void;
-  iloPass: string;
-  setIloPass: (pass: string) => void;
-  comfyUrl: string;
-  setComfyUrl: (url: string) => void;
-  ollamaUrl: string;
-  setOllamaUrl: (url: string) => void;
-  isDemoMode: boolean;
-  toggleDemoMode: () => void;
+  config: AppConfig;
+  isLoading: boolean;
+  error: string | null;
+  updateConfig: (newConfig: AppConfig) => Promise<void>;
+  refreshConfig: () => void;
 }
 
 const SettingsContext = createContext<SettingsContextType | undefined>(undefined);
 
+// Default empty config to prevent null checks everywhere
+const DEFAULT_CONFIG: AppConfig = {
+    ilo_url: "https://192.168.1.100",
+    ilo_user: "admin",
+    ilo_pass: "",
+    comfy_url: "http://localhost:8188",
+    ollama_url: "http://localhost:11434"
+};
+
 export const SettingsProvider = ({ children }: { children?: ReactNode }) => {
-  // Helper to persist state
-  const usePersistedState = (key: string, defaultValue: string) => {
-    const [state, setState] = useState(() => localStorage.getItem(key) || defaultValue);
-    useEffect(() => {
-      localStorage.setItem(key, state);
-    }, [key, state]);
-    return [state, setState] as const;
+  const [config, setConfig] = useState<AppConfig>(DEFAULT_CONFIG);
+  const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [error, setError] = useState<string | null>(null);
+  const [refreshTrigger, setRefreshTrigger] = useState(0);
+
+  // Fetch Config from Backend on Mount
+  useEffect(() => {
+    const fetchConfig = async () => {
+        setIsLoading(true);
+        try {
+            const res = await fetch('/api/config');
+            
+            // Handle 404 specifically - Fallback to defaults if endpoint missing
+            if (res.status === 404) {
+                console.warn("Config endpoint (/api/config) not found. Using default configuration.");
+                setConfig(DEFAULT_CONFIG);
+                setError(null);
+                return;
+            }
+
+            if (!res.ok) throw new Error(`Backend Error: ${res.status}`);
+            
+            const data: AppConfig = await res.json();
+            setConfig(data);
+            setError(null);
+        } catch (err: any) {
+            console.error("Failed to load config:", err);
+            // Non-blocking error: allow app to render with defaults, but show warning
+            setError("Could not sync with Backend (Port 8000). Using local defaults.");
+            setConfig(DEFAULT_CONFIG);
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
+    fetchConfig();
+  }, [refreshTrigger]);
+
+  const updateConfig = async (newConfig: AppConfig) => {
+    setIsLoading(true);
+    try {
+        const res = await fetch('/api/config', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(newConfig)
+        });
+        
+        if (!res.ok) throw new Error("Failed to save configuration to backend");
+        
+        // Optimistic update
+        setConfig(newConfig);
+        setError(null);
+    } catch (err: any) {
+        setError(err.message);
+        throw err;
+    } finally {
+        setIsLoading(false);
+    }
   };
 
-  const [iloUrl, setIloUrl] = usePersistedState('ILO_URL', 'https://192.168.1.100');
-  const [iloUser, setIloUser] = usePersistedState('ILO_USER', 'admin');
-  const [iloPass, setIloPass] = usePersistedState('ILO_PASS', 'password');
-  
-  const [comfyUrl, setComfyUrl] = usePersistedState('COMFY_URL', 'http://localhost:8188');
-  const [ollamaUrl, setOllamaUrl] = usePersistedState('OLLAMA_URL', 'http://localhost:11434');
-
-  const [isDemoMode, setIsDemoMode] = useState(() => localStorage.getItem('DEMO_MODE') === 'true');
-
-  const toggleDemoMode = () => {
-    const newVal = !isDemoMode;
-    setIsDemoMode(newVal);
-    localStorage.setItem('DEMO_MODE', String(newVal));
-  };
+  const refreshConfig = () => setRefreshTrigger(prev => prev + 1);
 
   return (
     <SettingsContext.Provider value={{
-      iloUrl, setIloUrl,
-      iloUser, setIloUser,
-      iloPass, setIloPass,
-      comfyUrl, setComfyUrl,
-      ollamaUrl, setOllamaUrl,
-      isDemoMode, toggleDemoMode
+      config,
+      isLoading,
+      error,
+      updateConfig,
+      refreshConfig
     }}>
       {children}
     </SettingsContext.Provider>

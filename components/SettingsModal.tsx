@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useSettings } from '../contexts/SettingsContext';
 
@@ -7,33 +8,25 @@ interface SettingsModalProps {
 }
 
 const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose }) => {
-    const { 
-        monitorIp, setMonitorIp,
-        monitorPort, setMonitorPort,
-        comfyUiPort, setComfyUiPort,
-        ollamaPort, setOllamaPort,
-        completeSetup
-    } = useSettings();
+    const { config, updateConfig } = useSettings();
 
-    const [ipInput, setIpInput] = useState(monitorIp);
-    const [monitorPortInput, setMonitorPortInput] = useState(monitorPort);
-    const [comfyPortInput, setComfyPortInput] = useState(comfyUiPort);
-    const [ollamaPortInput, setOllamaPortInput] = useState(ollamaPort);
+    const [iloInput, setIloInput] = useState(config.ilo_url);
+    const [comfyInput, setComfyInput] = useState(config.comfy_url);
+    const [ollamaInput, setOllamaInput] = useState(config.ollama_url);
 
-    // Sync local state with context when modal opens or context changes
     useEffect(() => {
-        setIpInput(monitorIp);
-        setMonitorPortInput(monitorPort);
-        setComfyPortInput(comfyUiPort);
-        setOllamaPortInput(ollamaPort);
-    }, [monitorIp, monitorPort, comfyUiPort, ollamaPort, isOpen]);
+        setIloInput(config.ilo_url);
+        setComfyInput(config.comfy_url);
+        setOllamaInput(config.ollama_url);
+    }, [config, isOpen]);
 
-    const handleSave = () => {
-        setMonitorIp(ipInput);
-        setMonitorPort(monitorPortInput);
-        setComfyUiPort(comfyPortInput);
-        setOllamaPort(ollamaPortInput);
-        completeSetup(); // Mark first-run setup as complete
+    const handleSave = async () => {
+        await updateConfig({
+            ...config,
+            ilo_url: iloInput,
+            comfy_url: comfyInput,
+            ollama_url: ollamaInput
+        });
         onClose();
     };
 
@@ -58,66 +51,44 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose }) => {
 
                 <div className="space-y-4">
                     <div>
-                        <label htmlFor="monitor-ip" className="block text-sm font-medium text-accent-light mb-1">
-                            Server Hostname / IP
+                        <label htmlFor="ilo-url" className="block text-sm font-medium text-accent-light mb-1">
+                            iLO URL
                         </label>
                         <input
                             type="text"
-                            id="monitor-ip"
-                            value={ipInput}
-                            onChange={(e) => setIpInput(e.target.value)}
-                            placeholder="e.g., 192.168.1.70"
+                            id="ilo-url"
+                            value={iloInput}
+                            onChange={(e) => setIloInput(e.target.value)}
+                            placeholder="https://192.168.1.100"
                             className="w-full bg-primary border border-accent-blue/30 rounded-lg p-2.5 text-text-main focus:outline-none focus:ring-2 focus:ring-highlight-cyan font-mono"
                         />
-                         <p className="text-xs text-accent-light/70 mt-1">
-                            The central IP address for the Local Big Bertha server.
-                        </p>
                     </div>
-
-                    <div className="grid grid-cols-3 gap-4">
-                        <div>
-                            <label htmlFor="monitor-port" className="block text-sm font-medium text-accent-light mb-1">
-                                Monitor Port
-                            </label>
-                            <input
-                                type="number"
-                                id="monitor-port"
-                                value={monitorPortInput}
-                                onChange={(e) => setMonitorPortInput(e.target.value)}
-                                placeholder="8010"
-                                className="w-full bg-primary border border-accent-blue/30 rounded-lg p-2.5 text-text-main focus:outline-none focus:ring-2 focus:ring-highlight-cyan font-mono"
-                            />
-                        </div>
-                        <div>
-                            <label htmlFor="comfy-port" className="block text-sm font-medium text-accent-light mb-1">
-                                ComfyUI Port
-                            </label>
-                            <input
-                                type="number"
-                                id="comfy-port"
-                                value={comfyPortInput}
-                                onChange={(e) => setComfyPortInput(e.target.value)}
-                                placeholder="8188"
-                                className="w-full bg-primary border border-accent-blue/30 rounded-lg p-2.5 text-text-main focus:outline-none focus:ring-2 focus:ring-highlight-cyan font-mono"
-                            />
-                        </div>
-                        <div>
-                            <label htmlFor="ollama-port" className="block text-sm font-medium text-accent-light mb-1">
-                                Ollama Port
-                            </label>
-                            <input
-                                type="number"
-                                id="ollama-port"
-                                value={ollamaPortInput}
-                                onChange={(e) => setOllamaPortInput(e.target.value)}
-                                placeholder="11434"
-                                className="w-full bg-primary border border-accent-blue/30 rounded-lg p-2.5 text-text-main focus:outline-none focus:ring-2 focus:ring-highlight-cyan font-mono"
-                            />
-                        </div>
+                    <div>
+                        <label htmlFor="comfy-url" className="block text-sm font-medium text-accent-light mb-1">
+                            ComfyUI URL
+                        </label>
+                        <input
+                            type="text"
+                            id="comfy-url"
+                            value={comfyInput}
+                            onChange={(e) => setComfyInput(e.target.value)}
+                            placeholder="http://localhost:8188"
+                            className="w-full bg-primary border border-accent-blue/30 rounded-lg p-2.5 text-text-main focus:outline-none focus:ring-2 focus:ring-highlight-cyan font-mono"
+                        />
                     </div>
-                    <p className="text-xs text-accent-light/70">
-                        Default ports: Monitor (8010), ComfyUI (8188), Ollama (11434).
-                    </p>
+                    <div>
+                        <label htmlFor="ollama-url" className="block text-sm font-medium text-accent-light mb-1">
+                            Ollama URL
+                        </label>
+                        <input
+                            type="text"
+                            id="ollama-url"
+                            value={ollamaInput}
+                            onChange={(e) => setOllamaInput(e.target.value)}
+                            placeholder="http://localhost:11434"
+                            className="w-full bg-primary border border-accent-blue/30 rounded-lg p-2.5 text-text-main focus:outline-none focus:ring-2 focus:ring-highlight-cyan font-mono"
+                        />
+                    </div>
                 </div>
 
                 <div className="flex justify-end space-x-4 mt-8">

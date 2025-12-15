@@ -1,191 +1,207 @@
 import React, { useState, useEffect } from 'react';
+import { useSystemData } from '../hooks/useSystemData';
 import { useSettings } from '../contexts/SettingsContext';
-import GpuCard from '../components/GpuCard';
-import { Server, Zap, Wind, Database, CheckCircle, AlertTriangle, XCircle } from 'lucide-react';
-import { ResponsiveContainer, LineChart, Line, XAxis, Tooltip } from 'recharts';
+import { GpuCluster } from '../components/GpuCluster';
+import { Server, Database, Cpu, Activity, AlertCircle, CheckCircle2 } from 'lucide-react';
+import { ResponsiveContainer, PieChart, Pie, Cell, Tooltip } from 'recharts';
 
-// Mock Data Generators for Demo/Offline Mode
-const generatePowerData = () => Array.from({ length: 15 }, (_, i) => ({
-  time: `${i}s`,
-  value: 200 + Math.random() * 50
-}));
+// Simple Service Status Checker
+const ServiceStatus = ({ name, url }: { name: string, url: string }) => {
+    const [status, setStatus] = useState<'online' | 'offline' | 'checking'>('checking');
 
-const ServiceBadge = ({ name, url, status }: { name: string, url: string, status: 'online' | 'offline' | 'checking' }) => (
-  <div className="flex items-center justify-between p-4 bg-panel border border-border rounded-lg">
-    <div className="flex items-center gap-3">
-      {status === 'online' && <CheckCircle className="text-hpe-green" size={20} />}
-      {status === 'offline' && <XCircle className="text-alert-red" size={20} />}
-      {status === 'checking' && <AlertTriangle className="text-warn-yellow animate-pulse" size={20} />}
-      <div>
-        <div className="font-bold text-white">{name}</div>
-        <div className="text-xs text-text-secondary truncate max-w-[150px]">{url}</div>
-      </div>
-    </div>
-    <div className={`px-2 py-1 rounded text-xs font-bold uppercase ${
-      status === 'online' ? 'bg-hpe-green/20 text-hpe-green' : 
-      status === 'offline' ? 'bg-alert-red/20 text-alert-red' : 
-      'bg-warn-yellow/20 text-warn-yellow'
-    }`}>
-      {status}
-    </div>
-  </div>
-);
+    useEffect(() => {
+        if (!url) {
+            setStatus('offline');
+            return;
+        }
+
+        const check = async () => {
+            try {
+                // In a real scenario, we might need a CORS proxy or the backend to ping this.
+                // Assuming simple reachability check or backend proxy for now.
+                // Since user requested frontend-ping:
+                await fetch(url, { mode: 'no-cors' }); 
+                // 'no-cors' allows us to send request, but we can't read response. 
+                // However, if it fails network error, it throws.
+                setStatus('online');
+            } catch (e) {
+                setStatus('offline');
+            }
+        };
+        check();
+        const interval = setInterval(check, 10000);
+        return () => clearInterval(interval);
+    }, [url]);
+
+    return (
+        <div className="flex items-center justify-between p-3 bg-panel border border-border rounded-lg">
+            <div className="flex items-center gap-3">
+                {status === 'online' ? <CheckCircle2 className="text-hpe-green" size={18} /> : 
+                 status === 'offline' ? <AlertCircle className="text-alert-red" size={18} /> :
+                 <Activity className="text-warn-yellow animate-pulse" size={18} />}
+                <div>
+                    <div className="font-bold text-sm text-white">{name}</div>
+                    <div className="text-[10px] text-text-secondary truncate max-w-[150px]">{url || 'Not Configured'}</div>
+                </div>
+            </div>
+            <div className={`text-[10px] font-bold px-2 py-0.5 rounded uppercase ${
+                status === 'online' ? 'bg-hpe-green/20 text-hpe-green' : 
+                'bg-alert-red/20 text-alert-red'
+            }`}>
+                {status}
+            </div>
+        </div>
+    );
+};
+
+// iLO Status Fetcher (via Backend Proxy)
+const IloStatus = () => {
+    const [health, setHealth] = useState<string>("Unknown");
+    
+    useEffect(() => {
+        const fetchIlo = async () => {
+            try {
+                // Calls Backend Proxy -> iLO
+                const res = await fetch('/api/redfish/v1/Systems/1');
+                if (res.ok) {
+                    const data = await res.json();
+                    setHealth(data?.Status?.Health || "Unknown");
+                } else {
+                    setHealth("Error");
+                }
+            } catch {
+                setHealth("Unreachable");
+            }
+        };
+        fetchIlo();
+        const interval = setInterval(fetchIlo, 30000); // Check every 30s
+        return () => clearInterval(interval);
+    }, []);
+
+    return (
+        <div className="bg-panel border border-border p-4 rounded-xl flex items-center justify-between">
+            <div className="flex items-center gap-3">
+                <div className="p-2 bg-hpe-green/10 rounded text-hpe-green">
+                    <Server size={20} />
+                </div>
+                <div>
+                    <div className="text-sm font-bold text-white">iLO 5 Controller</div>
+                    <div className="text-xs text-text-secondary">Proxy: /api/redfish/v1</div>
+                </div>
+            </div>
+            <div className="text-right">
+                <div className={`text-lg font-mono font-bold ${health === 'OK' ? 'text-hpe-green' : 'text-alert-red'}`}>
+                    {health}
+                </div>
+                <div className="text-[10px] text-text-secondary">HEALTH</div>
+            </div>
+        </div>
+    );
+};
 
 const Dashboard = () => {
-  const { isDemoMode, comfyUrl, ollamaUrl } = useSettings();
-  const [powerHistory, setPowerHistory] = useState(generatePowerData());
-  const [comfyStatus, setComfyStatus] = useState<'online' | 'offline' | 'checking'>('checking');
-  const [ollamaStatus, setOllamaStatus] = useState<'online' | 'offline' | 'checking'>('checking');
+  const { data, loading, error } = useSystemData();
+  const { config } = useSettings();
 
-  // Simulation / Polling Effect
-  useEffect(() => {
-    const interval = setInterval(() => {
-      // Update Chart Data
-      setPowerHistory(prev => {
-        const newData = [...prev.slice(1)];
-        newData.push({ time: 'now', value: (isDemoMode ? 200 : 0) + Math.random() * 50 });
-        return newData;
-      });
+  if (loading && !data) return (
+      <div className="h-full flex flex-col items-center justify-center text-hpe-green animate-pulse">
+          <Activity size={48} />
+          <p className="mt-4 font-mono">ESTABLISHING UPLINK TO LOCALHOST:8000...</p>
+      </div>
+  );
 
-      // Check Services (Simple Ping Logic)
-      if (isDemoMode) {
-        setComfyStatus('online');
-        setOllamaStatus('online');
-      } else {
-        // In real app, we would fetch here. 
-        // Simulating failure for now if not demo mode as we can't hit real localhost services from browser sandbox
-        setComfyStatus('offline');
-        setOllamaStatus('offline');
-      }
+  if (error && !data) return (
+      <div className="p-8 border-2 border-alert-red/50 bg-alert-red/10 rounded-xl text-center">
+          <h2 className="text-xl font-bold text-alert-red mb-2">TELEMETRY LOST</h2>
+          <p className="text-white mb-4">{error}</p>
+          <p className="text-sm text-text-secondary">Ensure the Python backend is running on port 8000.</p>
+      </div>
+  );
 
-    }, 2000);
-    return () => clearInterval(interval);
-  }, [isDemoMode]);
+  const sys = data?.system || { cpu_usage: 0, ram_used: 0, ram_total: 1 };
+  const ramData = [
+      { name: 'Used', value: sys.ram_used, color: '#00F3FF' },
+      { name: 'Free', value: sys.ram_total - sys.ram_used, color: '#161B22' }
+  ];
 
   return (
     <div className="space-y-6 animate-fade-in-up">
-      {/* Header Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-        <div className="bg-panel border border-border p-5 rounded-xl flex items-center gap-4">
-          <div className="p-3 bg-hpe-green/20 rounded-lg text-hpe-green">
-            <Zap size={24} />
-          </div>
-          <div>
-            <div className="text-sm text-text-secondary">Total Power</div>
-            <div className="text-2xl font-mono font-bold text-white">
-              {isDemoMode ? (245 + Math.floor(Math.random() * 20)) : 0} W
-            </div>
-          </div>
-        </div>
+      
+      {/* Top Row: System Vitality */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         
-        <div className="bg-panel border border-border p-5 rounded-xl flex items-center gap-4">
-          <div className="p-3 bg-hpe-cyan/20 rounded-lg text-hpe-cyan">
-            <Wind size={24} />
-          </div>
-          <div>
-            <div className="text-sm text-text-secondary">System Fan</div>
-            <div className="text-2xl font-mono font-bold text-white">
-              {isDemoMode ? 32 : 0} %
+        {/* CPU Tile */}
+        <div className="bg-panel border border-border p-5 rounded-xl flex flex-col justify-between relative overflow-hidden">
+            <div className="flex justify-between items-start z-10">
+                <div className="flex items-center gap-2 text-text-secondary">
+                    <Cpu size={18} />
+                    <span className="font-bold text-xs tracking-wider">CPU LOAD</span>
+                </div>
+                <span className="text-2xl font-mono font-bold text-white">{sys.cpu_usage.toFixed(1)}%</span>
             </div>
-          </div>
+            <div className="w-full bg-black/40 h-1.5 rounded-full mt-4 overflow-hidden">
+                <div className="h-full bg-white transition-all duration-500" style={{ width: `${sys.cpu_usage}%` }}></div>
+            </div>
+            <div className="absolute -right-6 -bottom-6 text-white/5">
+                <Cpu size={100} />
+            </div>
         </div>
 
-        <div className="bg-panel border border-border p-5 rounded-xl flex items-center gap-4">
-          <div className="p-3 bg-purple-500/20 rounded-lg text-purple-400">
-            <Database size={24} />
-          </div>
-          <div>
-            <div className="text-sm text-text-secondary">RAM Usage</div>
-            <div className="text-2xl font-mono font-bold text-white">
-              {isDemoMode ? 64.2 : 0} / 256 GB
-            </div>
-          </div>
+        {/* RAM Tile */}
+        <div className="bg-panel border border-border p-5 rounded-xl flex items-center gap-4 relative">
+             <div className="h-16 w-16 relative">
+                <ResponsiveContainer width="100%" height="100%">
+                    <PieChart>
+                        <Pie 
+                            data={ramData} 
+                            dataKey="value" 
+                            innerRadius={25} 
+                            outerRadius={32} 
+                            startAngle={90} 
+                            endAngle={-270}
+                            stroke="none"
+                        >
+                            {ramData.map((entry, index) => (
+                                <Cell key={`cell-${index}`} fill={entry.color} />
+                            ))}
+                        </Pie>
+                    </PieChart>
+                </ResponsiveContainer>
+                <div className="absolute inset-0 flex items-center justify-center">
+                    <Database size={14} className="text-hpe-cyan" />
+                </div>
+             </div>
+             <div>
+                 <div className="text-xs text-text-secondary font-bold tracking-wider">MEMORY</div>
+                 <div className="text-xl font-mono font-bold text-white">
+                     {sys.ram_used.toFixed(0)} <span className="text-sm text-text-secondary">/ {sys.ram_total} GB</span>
+                 </div>
+             </div>
         </div>
 
-        <div className="bg-panel border border-border p-5 rounded-xl flex items-center gap-4">
-          <div className="p-3 bg-blue-500/20 rounded-lg text-blue-400">
-            <Server size={24} />
-          </div>
-          <div>
-            <div className="text-sm text-text-secondary">Uptime</div>
-            <div className="text-2xl font-mono font-bold text-white">
-              14d 2h
-            </div>
-          </div>
-        </div>
+        {/* iLO Health */}
+        <IloStatus />
+
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Main Chart Area */}
-        <div className="lg:col-span-2 bg-panel border border-border rounded-xl p-6">
-          <h3 className="text-lg font-bold text-white mb-6">Power Consumption History</h3>
-          <div className="h-64 w-full">
-            <ResponsiveContainer width="100%" height="100%">
-              <LineChart data={powerHistory}>
-                <XAxis dataKey="time" hide />
-                <Tooltip 
-                  contentStyle={{ backgroundColor: '#161B22', borderColor: '#30363D', color: '#fff' }} 
-                  itemStyle={{ color: '#01A982' }}
-                />
-                <Line 
-                  type="monotone" 
-                  dataKey="value" 
-                  stroke="#01A982" 
-                  strokeWidth={3} 
-                  dot={false}
-                  activeDot={{ r: 8 }}
-                />
-              </LineChart>
-            </ResponsiveContainer>
-          </div>
-        </div>
-
-        {/* Service Health */}
-        <div className="space-y-6">
-          <div className="bg-panel border border-border rounded-xl p-6">
-            <h3 className="text-lg font-bold text-white mb-4">Service Status</h3>
-            <div className="space-y-3">
-              <ServiceBadge name="ComfyUI" url={comfyUrl} status={comfyStatus} />
-              <ServiceBadge name="Ollama API" url={ollamaUrl} status={ollamaStatus} />
-              <ServiceBadge name="iLO Redfish" url="Proxy: /redfish" status={isDemoMode ? 'online' : 'checking'} />
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* GPU Cluster Section */}
+      {/* Middle Row: GPU Cluster */}
       <div>
-        <h2 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
-          <span className="w-2 h-8 bg-hpe-cyan rounded-sm"></span>
-          GPU Acceleration Cluster
-        </h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          <GpuCard 
-            name="Tesla P40" 
-            vramTotal={24} 
-            vramUsed={isDemoMode ? 18.5 : 0} 
-            temp={isDemoMode ? 68 : 0} 
-            utilization={isDemoMode ? 92 : 0}
-            power={isDemoMode ? 180 : 0}
-          />
-           <GpuCard 
-            name="RTX 4000 Ada" 
-            vramTotal={20} 
-            vramUsed={isDemoMode ? 4.2 : 0} 
-            temp={isDemoMode ? 45 : 0} 
-            utilization={isDemoMode ? 12 : 0}
-            power={isDemoMode ? 65 : 0}
-          />
-           <GpuCard 
-            name="RTX 3050" 
-            vramTotal={6} 
-            vramUsed={isDemoMode ? 1.1 : 0} 
-            temp={isDemoMode ? 34 : 0} 
-            utilization={isDemoMode ? 2 : 0}
-            power={isDemoMode ? 30 : 0}
-          />
+          <div className="flex items-center gap-2 mb-4">
+              <span className="w-1 h-6 bg-hpe-green rounded-full"></span>
+              <h2 className="text-xl font-bold text-white tracking-tight">GPU ACCELERATION CLUSTER</h2>
+          </div>
+          <GpuCluster gpus={data?.gpus || []} />
+      </div>
+
+      {/* Bottom Row: AI Services Status */}
+      <div className="bg-panel border border-border rounded-xl p-6">
+        <h3 className="text-sm font-bold text-text-secondary uppercase tracking-wider mb-4">Service Mesh</h3>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <ServiceStatus name="ComfyUI Node" url={config.comfy_url} />
+            <ServiceStatus name="Ollama LLM" url={config.ollama_url} />
         </div>
       </div>
+
     </div>
   );
 };
