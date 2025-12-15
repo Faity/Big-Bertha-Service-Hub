@@ -1,78 +1,63 @@
-import React, { createContext, useContext, useState, ReactNode } from 'react';
+import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 
 interface SettingsContextType {
-    monitorIp: string;
-    setMonitorIp: (ip: string) => void;
-    monitorPort: string;
-    setMonitorPort: (port: string) => void;
-    comfyUiPort: string;
-    setComfyUiPort: (port: string) => void;
-    ollamaPort: string;
-    setOllamaPort: (port: string) => void;
-    isSetup: boolean;
-    completeSetup: () => void;
+  iloUrl: string;
+  setIloUrl: (url: string) => void;
+  iloUser: string;
+  setIloUser: (user: string) => void;
+  iloPass: string;
+  setIloPass: (pass: string) => void;
+  comfyUrl: string;
+  setComfyUrl: (url: string) => void;
+  ollamaUrl: string;
+  setOllamaUrl: (url: string) => void;
+  isDemoMode: boolean;
+  toggleDemoMode: () => void;
 }
 
 const SettingsContext = createContext<SettingsContextType | undefined>(undefined);
 
 export const SettingsProvider = ({ children }: { children?: ReactNode }) => {
-    // Helper to get from local storage or default
-    const getStoredValue = (key: string, defaultValue: string) => {
-        return localStorage.getItem(key) || defaultValue;
-    };
+  // Helper to persist state
+  const usePersistedState = (key: string, defaultValue: string) => {
+    const [state, setState] = useState(() => localStorage.getItem(key) || defaultValue);
+    useEffect(() => {
+      localStorage.setItem(key, state);
+    }, [key, state]);
+    return [state, setState] as const;
+  };
 
-    const [monitorIp, setMonitorIpState] = useState<string>(() => getStoredValue('MONITOR_API_IP', '127.0.0.1'));
-    const [monitorPort, setMonitorPortState] = useState<string>(() => getStoredValue('MONITOR_API_PORT', '8010'));
-    const [comfyUiPort, setComfyUiPortState] = useState<string>(() => getStoredValue('COMFYUI_PORT', '8188'));
-    const [ollamaPort, setOllamaPortState] = useState<string>(() => getStoredValue('OLLAMA_PORT', '11434'));
-    
-    // Check if the user has completed the initial setup (saved settings at least once)
-    const [isSetup, setIsSetup] = useState<boolean>(() => {
-        return localStorage.getItem('APP_SETUP_COMPLETED') === 'true';
-    });
+  const [iloUrl, setIloUrl] = usePersistedState('ILO_URL', 'https://192.168.1.100');
+  const [iloUser, setIloUser] = usePersistedState('ILO_USER', 'admin');
+  const [iloPass, setIloPass] = usePersistedState('ILO_PASS', 'password');
+  
+  const [comfyUrl, setComfyUrl] = usePersistedState('COMFY_URL', 'http://localhost:8188');
+  const [ollamaUrl, setOllamaUrl] = usePersistedState('OLLAMA_URL', 'http://localhost:11434');
 
-    const setMonitorIp = (ip: string) => {
-        setMonitorIpState(ip);
-        localStorage.setItem('MONITOR_API_IP', ip);
-    };
+  const [isDemoMode, setIsDemoMode] = useState(() => localStorage.getItem('DEMO_MODE') === 'true');
 
-    const setMonitorPort = (port: string) => {
-        setMonitorPortState(port);
-        localStorage.setItem('MONITOR_API_PORT', port);
-    };
+  const toggleDemoMode = () => {
+    const newVal = !isDemoMode;
+    setIsDemoMode(newVal);
+    localStorage.setItem('DEMO_MODE', String(newVal));
+  };
 
-    const setComfyUiPort = (port: string) => {
-        setComfyUiPortState(port);
-        localStorage.setItem('COMFYUI_PORT', port);
-    };
-
-    const setOllamaPort = (port: string) => {
-        setOllamaPortState(port);
-        localStorage.setItem('OLLAMA_PORT', port);
-    };
-
-    const completeSetup = () => {
-        setIsSetup(true);
-        localStorage.setItem('APP_SETUP_COMPLETED', 'true');
-    };
-
-    return (
-        <SettingsContext.Provider value={{ 
-            monitorIp, setMonitorIp,
-            monitorPort, setMonitorPort,
-            comfyUiPort, setComfyUiPort,
-            ollamaPort, setOllamaPort,
-            isSetup, completeSetup
-        }}>
-            {children}
-        </SettingsContext.Provider>
-    );
+  return (
+    <SettingsContext.Provider value={{
+      iloUrl, setIloUrl,
+      iloUser, setIloUser,
+      iloPass, setIloPass,
+      comfyUrl, setComfyUrl,
+      ollamaUrl, setOllamaUrl,
+      isDemoMode, toggleDemoMode
+    }}>
+      {children}
+    </SettingsContext.Provider>
+  );
 };
 
-export const useSettings = (): SettingsContextType => {
-    const context = useContext(SettingsContext);
-    if (context === undefined) {
-        throw new Error('useSettings must be used within a SettingsProvider');
-    }
-    return context;
+export const useSettings = () => {
+  const context = useContext(SettingsContext);
+  if (!context) throw new Error("useSettings must be used within SettingsProvider");
+  return context;
 };
